@@ -33,7 +33,7 @@ toptier_agency_map = {toptier_agency['toptier_agency_id']: toptier_agency['cgac_
 class Command(BaseCommand):
     help = "Update historical transaction data for a fiscal year from the Broker."
 
-    def update_transaction_assistance(self, db_cursor, fiscal_year=None, start_page=1, limit=500000):
+    def update_transaction_assistance(self, db_cursor, fiscal_year=None, start_page=1, limit=500000, last_updated=None):
         if fiscal_year:
             assistance_data = self.get_assistance_data(db_cursor, fiscal_year=fiscal_year, page=start_page, limit=limit)
 
@@ -45,8 +45,9 @@ class Command(BaseCommand):
         else:
             update_finished = False
             rows_loaded = 0
+            # Loop through getting chunks of data until we've got it all
             while not update_finished:
-                assistance_data = self.get_assistance_data(db_cursor, page=start_page, limit=limit)
+                assistance_data = self.get_assistance_data(db_cursor, page=start_page, limit=limit, last_updated=last_updated)
 
                 logger.info("Getting count for next batch of rows")
                 current_rows = len(assistance_data)
@@ -57,6 +58,7 @@ class Command(BaseCommand):
                     self.process_assistance_data(assistance_data, current_rows)
                     logger.info("Total rows loaded: " + str(current_rows + rows_loaded))
 
+                # we're done loading if the number of rows in this batch is smaller than the limit for rows
                 if current_rows < limit:
                     update_finished = True
                 else:
@@ -64,7 +66,7 @@ class Command(BaseCommand):
                     rows_loaded += current_rows
 
     @staticmethod
-    def get_assistance_data(db_cursor, fiscal_year=None, page=1, limit=500000):
+    def get_assistance_data(db_cursor, fiscal_year=None, page=1, limit=500000, last_updated=None):
         # logger.info("Getting IDs for what's currently in the DB...")
         # current_ids = TransactionFABS.objects
         #
@@ -89,7 +91,7 @@ class Command(BaseCommand):
             arguments += [fy_end]
         else:
             query += " WHERE updated_at > %s"
-            arguments += ["09/25/2017"]  # TODO make this pull from a table with "last updated" listed
+            arguments += [last_updated.strftime('%m/%d/%Y')]
         query += ' ORDER BY published_award_financial_assistance_id LIMIT %s OFFSET %s'
         arguments += [limit, (page - 1) * limit]
 
@@ -274,7 +276,7 @@ class Command(BaseCommand):
                 except IntegrityError:
                     pass
 
-    def update_transaction_contract(self, db_cursor, fiscal_year=None, start_page=1, limit=500000):
+    def update_transaction_contract(self, db_cursor, fiscal_year=None, start_page=1, limit=500000, last_updated=None):
         if fiscal_year:
             contract_data = self.get_contract_data(db_cursor, fiscal_year=fiscal_year, page=start_page, limit=limit)
 
@@ -286,8 +288,9 @@ class Command(BaseCommand):
         else:
             update_finished = False
             rows_loaded = 0
+            # Loop through getting chunks of data until we've got it all
             while not update_finished:
-                contract_data = self.get_contract_data(db_cursor, page=start_page, limit=limit)
+                contract_data = self.get_contract_data(db_cursor, page=start_page, limit=limit, last_updated=last_updated)
 
                 logger.info("Getting count for next batch of rows")
                 current_rows = len(contract_data)
@@ -298,6 +301,7 @@ class Command(BaseCommand):
                     self.process_contract_data(contract_data, current_rows)
                     logger.info("Total rows loaded: " + str(current_rows + rows_loaded))
 
+                # we're done loading if the number of rows in this batch is smaller than the limit for rows
                 if current_rows < limit:
                     update_finished = True
                 else:
@@ -305,7 +309,7 @@ class Command(BaseCommand):
                     rows_loaded += current_rows
 
     @staticmethod
-    def get_contract_data(db_cursor, fiscal_year=None, page=1, limit=500000):
+    def get_contract_data(db_cursor, fiscal_year=None, page=1, limit=500000, last_updated=None):
         # logger.info("Getting IDs for what's currently in the DB...")
         # current_ids = TransactionFPDS.objects
         #
@@ -329,8 +333,8 @@ class Command(BaseCommand):
             arguments += [fy_begin]
             arguments += [fy_end]
         else:
-            query += " WHERE last_modified > %s"
-            arguments += ["09/25/2017"]  # TODO make this pull from a table with "last updated" listed
+            query += " WHERE updated_at > %s"
+            arguments += [last_updated.strftime('%m/%d/%Y')]
         query += ' ORDER BY detached_award_procurement_id LIMIT %s OFFSET %s'
         arguments += [limit, (page - 1) * limit]
 
@@ -580,18 +584,29 @@ class Command(BaseCommand):
         else:
             page = 1
             limit = limit[0] if limit else 500000
+            last_updated = "09/25/2017"  # TODO make this pull from a table with "last updated" listed
 
             logger.info('Starting D1 update data load...')
             start = timeit.default_timer()
-            self.update_transaction_contract(db_cursor=db_cursor, start_page=page, limit=limit)
+            self.update_transaction_contract(db_cursor=db_cursor, start_page=page, limit=limit, last_updated=last_updated)
             end = timeit.default_timer()
             logger.info('Finished D1 update data load in ' + str(end - start) + ' seconds')
 
             logger.info('Starting D2 update data load...')
             start = timeit.default_timer()
-            self.update_transaction_assistance(db_cursor=db_cursor, start_page=page, limit=limit)
+            self.update_transaction_assistance(db_cursor=db_cursor, start_page=page, limit=limit, last_updated=last_updated)
             end = timeit.default_timer()
             logger.info('Finished D2 update data load in ' + str(end - start) + ' seconds')
+
+            # TODO delete stuff
+            # check_date = last_updated
+            # while check_date <= current_date
+            #   get all files with current date (month-day-year_delete_records_*)
+            #   for each entry in file, compare check_date with updated_at of record in your DB
+            #       if updated_at < check_date, delete, else ignore
+            #   check_date + 1 day
+
+            # TODO update last updated date to today/yesterday
 
         logger.info('Updating awards to reflect their latest associated transaction info...')
         start = timeit.default_timer()
