@@ -497,12 +497,12 @@ class Command(BaseCommand):
                     as_dict=True)
 
                 transaction_contract = TransactionFPDS(transaction=transaction, **contract_instance)
-                # catch exception and do nothing if we see
+                # catch exception and update existing row
                 # "django.db.utils.IntegrityError: duplicate key value violates unique constraint"
                 try:
                     transaction_contract.save()
                 except IntegrityError:
-                    pass
+                    TransactionFPDS.objects.filter(detached_award_proc_unique=row['detached_award_proc_unique']).update(**contract_instance)
 
     def add_arguments(self, parser):
         
