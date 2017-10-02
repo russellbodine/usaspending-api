@@ -32,6 +32,7 @@ ALLOWED_HOSTS = ['*']
 CSV_S3_BUCKET_NAME = ""
 CSV_SQS_QUEUE_NAME = ""
 CSV_AWS_REGION = ""
+CSV_FPDS_FABS_BUCKET_NAME = ""
 
 # Application definition
 

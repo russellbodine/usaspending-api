@@ -1,13 +1,19 @@
 import logging
 import timeit
-from datetime import datetime
+import re
+import boto3
+import csv
+from datetime import datetime, timedelta
+import urllib.request
 
+from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.db import connections, transaction as db_transaction, IntegrityError
 
 from usaspending_api.etl.broker_etl_helpers import dictfetchall
 from usaspending_api.awards.models import TransactionNormalized, TransactionFABS, TransactionFPDS
 from usaspending_api.awards.models import Award
+from usaspending_api.broker.models import FPDSFABSUpdate
 from usaspending_api.references.models import Agency, LegalEntity, SubtierAgency, ToptierAgency
 from usaspending_api.etl.management.load_base import copy, get_or_create_location, format_date, load_data_into_model
 from usaspending_api.etl.award_helpers import update_awards, update_contract_awards, update_award_categories
@@ -571,20 +577,22 @@ class Command(BaseCommand):
             if not options['assistance']:
                 logger.info('Starting D1 historical data load...')
                 start = timeit.default_timer()
-                self.update_transaction_contract(db_cursor = db_cursor, fiscal_year=fiscal_year, start_page=page, limit=limit)
+                self.update_transaction_contract(db_cursor=db_cursor, fiscal_year=fiscal_year, start_page=page, limit=limit)
                 end = timeit.default_timer()
                 logger.info('Finished D1 historical data load in ' + str(end - start) + ' seconds')
 
             if not options['contracts']:
                 logger.info('Starting D2 historical data load...')
                 start = timeit.default_timer()
-                self.update_transaction_assistance(db_cursor = db_cursor, fiscal_year=fiscal_year, start_page=page, limit=limit)
+                self.update_transaction_assistance(db_cursor=db_cursor, fiscal_year=fiscal_year, start_page=page, limit=limit)
                 end = timeit.default_timer()
                 logger.info('Finished D2 historical data load in ' + str(end - start) + ' seconds')
         else:
             page = 1
             limit = limit[0] if limit else 500000
-            last_updated = "09/25/2017"  # TODO make this pull from a table with "last updated" listed
+            last_updated_obj = FPDSFABSUpdate.objects.first()
+            last_updated = last_updated_obj.last_update
+            today = datetime.date(datetime.now())
 
             logger.info('Starting D1 update data load...')
             start = timeit.default_timer()
@@ -599,14 +607,41 @@ class Command(BaseCommand):
             logger.info('Finished D2 update data load in ' + str(end - start) + ' seconds')
 
             # TODO delete stuff
-            # check_date = last_updated
-            # while check_date <= current_date
-            #   get all files with current date (month-day-year_delete_records_*)
-            #   for each entry in file, compare check_date with updated_at of record in your DB
-            #       if updated_at < check_date, delete, else ignore
-            #   check_date + 1 day
+            check_date = last_updated
+            # get the client so we can make URLs and the resource so we can list the items in the bucket
+            s3client = boto3.client('s3', region_name=settings.CSV_AWS_REGION)
+            s3resource = boto3.resource('s3', region_name=settings.CSV_AWS_REGION)
+            s3_bucket = s3resource.Bucket(settings.CSV_FPDS_FABS_BUCKET_NAME)
 
-            # TODO update last updated date to today/yesterday
+            # make an array of all the keys in the bucket
+            file_list = [item.key for item in s3_bucket.objects.all()]
+
+            while check_date <= today:
+                # Only use files that match the date we're currently checking
+                for item in file_list:
+                    # if the date on the file is the same day as we're checking
+                    if re.match('^'+check_date.strftime('%m-%d-%Y')+'_delete_records_(IDV|award)\.csv$', item):
+                        # make the url params to pass
+                        url_params = {
+                            'Bucket': settings.CSV_FPDS_FABS_BUCKET_NAME,
+                            'Key': item
+                        }
+                        # get the url for the current file
+                        file_path = s3client.generate_presigned_url('get_object', Params=url_params)
+                        current_file = urllib.request.urlopen(file_path)
+                        reader = csv.reader(current_file.read().decode("utf-8").splitlines())
+                        # skip the header, the reader doesn't ignore it for some reason
+                        next(reader)
+                        # make an array of all the afa_generated_unique
+                        unique_key_list = [rows[1] for rows in reader]
+                        print(unique_key_list)
+                        # TODO actually delete stuff
+                        print("delete stuff from: " + item)
+                check_date += timedelta(days=1)
+
+            # update last updated date to today
+            last_updated_obj.last_update = today
+            last_updated_obj.save()
 
         logger.info('Updating awards to reflect their latest associated transaction info...')
         start = timeit.default_timer()
