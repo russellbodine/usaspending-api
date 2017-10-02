@@ -634,9 +634,14 @@ class Command(BaseCommand):
                         next(reader)
                         # make an array of all the afa_generated_unique
                         unique_key_list = [rows[1] for rows in reader]
-                        print(unique_key_list)
-                        # TODO actually delete stuff
-                        print("delete stuff from: " + item)
+
+                        # get a list of items to delete that match the unique keys and have been updated before or on
+                        # the date that's being checked
+                        delete_list = TransactionFPDS.objects.filter(detached_award_proc_unique__in=unique_key_list,
+                                                                     updated_at__date__lte=check_date)
+                        for delete_item in delete_list:
+                            delete_item.delete()
+
                 check_date += timedelta(days=1)
 
             # update last updated date to today
