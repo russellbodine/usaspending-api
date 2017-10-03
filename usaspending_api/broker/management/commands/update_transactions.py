@@ -178,11 +178,11 @@ class Command(BaseCommand):
                                                                                  str(total_rows),
                                                                                  datetime.now() - start_time))
 
-                # if the row isn't active, delete the entry if it exists
-                if not row['is_active']:
+                # if the row has a delete indicator in it, delete it if it exists in this DB
+                if row['correction_late_delete_ind'] and row['correction_late_delete_ind'].upper() == 'D':
                     TransactionFABS.objects.filter(afa_generated_unique=row['afa_generated_unique']).delete()
-                # only update if the row is active
-                else:
+                # only update if the row is active, we don't care about intermediate changes, only the final state
+                elif row['is_active']:
                     legal_entity_location, created = get_or_create_location(
                         legal_entity_location_field_map, row, legal_entity_location_value_map
                     )
