@@ -628,7 +628,6 @@ class Command(BaseCommand):
                 for item in file_list:
                     # if the date on the file is the same day as we're checking
                     if re.match('^'+check_date.strftime('%m-%d-%Y')+'_delete_records_(IDV|award).*', item):
-                        print(item)
                         # make the url params to pass
                         url_params = {
                             'Bucket': settings.CSV_FPDS_FABS_BUCKET_NAME,
