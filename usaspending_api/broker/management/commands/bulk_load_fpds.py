@@ -12,7 +12,9 @@ from usaspending_api.etl.management.load_base import load_data_into_model, forma
 from usaspending_api.references.helpers import canonicalize_location_dict
 from usaspending_api.references.models import RefCountryCode, Location, LegalEntity, Agency, ToptierAgency, \
     SubtierAgency
-from usaspending_api.etl.award_helpers import update_awards, update_contract_awards, update_award_categories
+from usaspending_api.etl.award_helpers import update_awards, update_contract_awards, update_award_categories, \
+    update_file_c_file_d_awards
+from usaspending_api.etl.management.commands import update_file_c_file_d_awards_sql
 
 BATCH_SIZE = 100000
 
@@ -599,4 +601,22 @@ class Command(BaseCommand):
             end = timeit.default_timer()
             logger.info('Finished updating award category variables in ' + str(end - start) + ' seconds')
         else:
-            logger.info('Nothing to insert...FINISHED!')
+            logger.info('Nothing to insert.')
+
+        if total_rows_delete + total_rows > 0:
+            logger.info('Updating award file C file D linkage...')
+            start = timeit.default_timer()
+            # If only a few rows where updated, check the linkage on specifically those rows.
+            # Otherwise, run a bulk file C file D linkage script. (est 12 min)
+            if total_rows_delete + total_rows < 1000:
+                update_file_c_file_d_awards_sql(to_insert + to_delete)
+            else:
+                # run bulk update
+                update_file_c_file_d_awards()
+            end = timeit.default_timer()
+            logger.info('Finished linking file C file D in ' + str(end - start) + ' seconds')
+
+        else:
+            logger.info('No file C file D linkages required.')
+
+        logger.info('Finished!')

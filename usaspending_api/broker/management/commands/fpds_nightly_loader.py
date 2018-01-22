@@ -346,7 +346,7 @@ class Command(BaseCommand):
                 # run bulk update
                 update_file_c_file_d_awards()
             end = timeit.default_timer()
-            logger.info('Finished updating award category variables in ' + str(end - start) + ' seconds')
+            logger.info('Finished linking file C file D in ' + str(end - start) + ' seconds')
         else:
             logger.info('Nothing to insert...')
 
