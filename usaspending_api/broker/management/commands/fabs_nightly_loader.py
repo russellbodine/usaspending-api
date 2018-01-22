@@ -10,7 +10,8 @@ from usaspending_api.broker.models import ExternalDataLoadDate
 from usaspending_api.broker import lookups
 from usaspending_api.etl.management.load_base import load_data_into_model, format_date, get_or_create_location
 from usaspending_api.references.models import LegalEntity, Agency, ToptierAgency, SubtierAgency
-from usaspending_api.etl.award_helpers import update_awards, update_award_categories
+from usaspending_api.etl.award_helpers import update_awards, update_award_categories, update_file_c_file_d_awards
+from usaspending_api.etl.management.commands import update_file_c_file_d_awards_sql
 
 # start = timeit.default_timer()
 # function_call
@@ -304,6 +305,20 @@ class Command(BaseCommand):
             update_award_categories(tuple(award_update_id_list))
             end = timeit.default_timer()
             logger.info('Finished updating award category variables in ' + str(end - start) + ' seconds')
+
+            logger.info('Updating award file C file D linkage...')
+            start = timeit.default_timer()
+            # If only a few rows where updated, check the linkage on specifically those rows.
+            # Otherwise, run a bulk file C file D linkage script. (est 12 min)
+            if total_rows < 1000:
+                update_file_c_file_d_awards_sql(ids_to_delete+award_update_id_list)
+            else:
+                # run bulk update
+                update_file_c_file_d_awards()
+            end = timeit.default_timer()
+            logger.info('Finished updating award category variables in ' + str(end - start) + ' seconds')
+
+
         else:
             logger.info('Nothing to insert...')
 

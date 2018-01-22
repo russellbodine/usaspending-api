@@ -1,7 +1,6 @@
 from django.db import connection
 import logging
-from usaspending_api.awards.models import Award, Agency
-from usaspending_api.awards.models import TransactionNormalized
+from usaspending_api.awards.models import Award, Agency,TransactionNormalized, FinancialAccountsByAwards
 from django.db.models import Case, Value, When, TextField
 
 
@@ -88,6 +87,44 @@ def update_awards(award_tuple=None):
         rows = cursor.rowcount
 
     return rows
+
+
+def update_file_c_file_d_awards(award_ids):
+    logger = logging.getLogger('console')
+
+    logger.info('starting File C awards remapping')
+
+    # 1) Get all file C awards
+    faba_queryset = FinancialAccountsByAwards.objects.filter(award_id__in=award_ids,
+                                                             award__recipient_id__isnull=True
+                                                             ).values("piid", "fain", "uri", "parent_award_id",
+                                                                      "award_id")
+
+    awards = Award.objects  # this stops the property lookup each iteration, saving 3+ seconds every 100 rows!
+    possible_agencies_cache = {}
+    for index, faba in enumerate(faba_queryset, 1):
+
+        # split up the query based on null vals
+        kwargs = {}
+        kwargs['recipient_id__isnull'] = False
+        if faba['piid'] is not None:
+            kwargs['piid'] = faba['piid']
+        if faba['parent_award_id'] is not None:
+            kwargs['parent_award__piid'] = faba['parent_award_id']
+        if faba['fain'] is not None:
+            kwargs['fain'] = faba['fain']
+        if faba['uri'] is not None:
+            kwargs['uri'] = faba['uri']
+
+        award_queryset = awards.filter(**kwargs).values("id")
+
+        award_count = len(award_queryset)
+
+        if award_count == 1:
+            file_d_award = award_queryset[0]
+            faba['award_id'] = file_d_award['id']
+            faba.save()
+    return
 
 
 def update_contract_awards(award_tuple=None):
