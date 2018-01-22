@@ -341,10 +341,10 @@ class Command(BaseCommand):
             # If only a few rows where updated, check the linkage on specifically those rows.
             # Otherwise, run a bulk file C file D linkage script. (est 12 min)
             if total_rows < 1000:
-                update_file_c_file_d_awards_sql(ids_to_delete + award_update_id_list)
+                update_file_c_file_d_awards(ids_to_delete + award_update_id_list)
             else:
                 # run bulk update
-                update_file_c_file_d_awards()
+                update_file_c_file_d_awards_sql()
             end = timeit.default_timer()
             logger.info('Finished linking file C file D in ' + str(end - start) + ' seconds')
         else:
