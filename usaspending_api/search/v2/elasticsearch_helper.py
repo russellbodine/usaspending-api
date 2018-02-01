@@ -71,3 +71,32 @@ def search_transactions(filters, fields, sort, order, lower_limit, limit):
     total = response['hits']['total']
     results = format_for_frontend(response['hits']['hits'])
     return results, total
+
+def get_sum_and_count_aggregation_results(keyword):
+    index_name = '{}-'.format(TRANSACTIONS_INDEX_ROOT.replace('_', ''))+'*'
+    query = {"query": {"query_string": {"query": keyword}},
+   "aggs": {
+      "prime_awards_obligation_amount": {
+         "sum": {
+            "field": "transaction_amount"
+         }
+      },
+      "prime_awards_count": {
+         "value_count": {
+            "field": "transaction_amount"
+         }
+      }
+      }, "size" : 0}
+    found_result = False
+    while not found_result:
+        try:
+            response = CLIENT.search(index=index_name, body=query)
+            found_result = True
+            return response['aggregations']
+        except (TransportError, ConnectionError) as e:
+            logger.error(e)
+            logger.error('Error retrieving ids. Retrying connection.')
+
+def spending_by_transaction_sum_and_count(filters):
+    keyword = filters['keyword']
+    return get_sum_and_count_aggregation_results(keyword)
