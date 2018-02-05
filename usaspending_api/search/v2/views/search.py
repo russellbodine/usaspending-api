@@ -814,18 +814,13 @@ class TransactionSummaryVisualizationViewSet(APIView):
         json_request = request.data
         filters = json_request.get("filters", None)
         use_elastic = True
-        
         if filters is None:
             raise InvalidParameterException("Missing one or more required request parameters: filters")
 
         if use_elastic:
             results = spending_by_transaction_sum_and_count(filters)
-         
         else:
-            
             queryset, model = transaction_spending_summary(filters)
-
-
             if model in ['UniversalTransactionView']:
                 agg_results = queryset.aggregate(
                     award_count=Count('*'),  # surprisingly, this works to create "SELECT COUNT(*) ..."
@@ -841,6 +836,5 @@ class TransactionSummaryVisualizationViewSet(APIView):
                 'prime_awards_count': agg_results['award_count'] or 0,
                 'prime_awards_obligation_amount': agg_results['award_spending'] or 0.0,
             }
-        
         # build response
         return Response({"results": results})
