@@ -23,7 +23,7 @@ class Command(BaseCommand):
         bulk_load_file_path = 'usaspending_api/broker/management/sql/'
 
         # this is listed out to maintain a very specific order
-        file_names = ['load_constraints.sql']
+        file_names = ['load_exec_comp.sql', 'update_tables.sql', 'load_constraints.sql']
         file_names = [bulk_load_file_path + name for name in file_names]
 
         # matview_file_path = 'usaspending_api/database_scripts/matviews/'
