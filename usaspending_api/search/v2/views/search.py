@@ -837,8 +837,7 @@ class TransactionSummaryVisualizationViewSet(APIView):
                     award_spending=Sum("federal_action_obligation"))
 
             results = {
-                # The Django Aggregate command will return None if no rows are a match.
-                # It is cleaner to return 0 than "None"/null so the values are checked for None
+
                 'prime_awards_count': agg_results['award_count'] or 0,
                 'prime_awards_obligation_amount': agg_results['award_spending'] or 0.0,
             }

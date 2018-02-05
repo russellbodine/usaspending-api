@@ -83,7 +83,7 @@ def get_sum_and_count_aggregation_results(keyword):
       },
       "prime_awards_count": {
          "value_count": {
-            "field": "transaction_amount"
+            "field": "transaction_id"
          }
       }
       }, "size" : 0}
@@ -92,7 +92,10 @@ def get_sum_and_count_aggregation_results(keyword):
         try:
             response = CLIENT.search(index=index_name, body=query)
             found_result = True
-            return response['aggregations']
+            results = {}
+            results["prime_awards_count"] = response['aggregations']["prime_awards_count"]["value"]
+            results["prime_awards_obligation_amount"] = round(response['aggregations']["prime_awards_obligation_amount"]["value"], 2)
+            return results
         except (TransportError, ConnectionError) as e:
             logger.error(e)
             logger.error('Error retrieving ids. Retrying connection.')
