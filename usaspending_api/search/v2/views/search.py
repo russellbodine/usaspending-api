@@ -29,6 +29,8 @@ from usaspending_api.awards.v2.filters.view_selector import spending_by_award_co
 from usaspending_api.awards.v2.filters.view_selector import spending_by_geography
 from usaspending_api.awards.v2.filters.view_selector import spending_over_time
 from usaspending_api.awards.v2.filters.view_selector import transaction_spending_summary
+from usaspending_api.awards.v2.filters.view_selector import spending_by_award_2
+
 
 from usaspending_api.awards.v2.lookups.lookups import contract_type_mapping, loan_type_mapping, \
     non_loan_assistance_type_mapping
@@ -902,26 +904,34 @@ class SpendingByAwardVisualizationViewSet(APIView):
             raise InvalidParameterException("Sort value not found in fields: {}".format(sort))
         print("queryset start")
         # build sql query filters
-        queryset = transaction_spending_summary(filters)
+        queryset, model = spending_by_award_2(filters)
 
         print("queryset end. values start")
         # print(queryset.query)
         values = {'award_id', 'piid', 'fain', 'uri', 'type'}  # always get at least these columns
         for field in fields:
             if transaction_contracts_mapping.get(field):
+                print("fieldcon")
+                print(field)
                 values.add(transaction_contracts_mapping.get(field))
-            if loan_transaction_mapping.get(field):
-                values.add(loan_transaction_mapping.get(field))
-            if non_loan_assistance_transaction_mapping.get(field):
-                values.add(non_loan_assistance_transaction_mapping.get(field))
+            # commented out for testing
+            # if loan_transaction_mapping.get(field):
+            #     print("fieldloan")
+            #     print(field)
+            #     values.add(loan_transaction_mapping.get(field))
+            # if non_loan_assistance_transaction_mapping.get(field):
+            #     print("fieldass")
+            #     print(field)
+            #     values.add(non_loan_assistance_transaction_mapping.get(field))
 
         print("values complete, sort now")
         # Modify queryset to be ordered if we specify "sort" in the request
         if sort:
             if set(filters["award_type_codes"]) <= set(contract_type_mapping):
-                sort_filters = [award_contracts_mapping[sort]]
+                sort_filters = [transaction_contracts_mapping[sort]]
+                print("here")
             elif set(filters["award_type_codes"]) <= set(loan_type_mapping):  # loans
-                sort_filters = [loan_award_mapping[sort]]
+                sort_filters = [loan_transaction_mapping[sort]]
             else:  # assistance data
                 sort_filters = [non_loan_assistance_transaction_mapping[sort]]
 
@@ -929,11 +939,14 @@ class SpendingByAwardVisualizationViewSet(APIView):
                 sort_filters = ["piid", "fain", "uri"]
             if order == 'desc':
                 sort_filters = ['-' + sort_filter for sort_filter in sort_filters]
-
-            queryset = queryset.order_by(*sort_filters).values(*list(values))
-
+            print(sort_filters)
+            print(values)
+            queryset = queryset.order_by(*sort_filters).values(*list(values)).distinct("award_id")
+            print(queryset.query)
         else:
-            queryset = queryset.values(*list(values))
+            queryset = queryset.values(*list(values)).distinct("award_id")
+
+
 
         print("sort complete, response now")
 

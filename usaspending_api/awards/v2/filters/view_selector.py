@@ -301,7 +301,8 @@ def spending_by_award_2(filters):
         # 'SummaryTransactionGeoView',
         # 'SummaryTransactionMonthView',
         # 'SummaryTransactionView',
-        'UniversalTransactionView'
+        # 'UniversalTransactionView'
+        'TestAwardTableMatview'
     ]
     model = None
     for view in view_chain:

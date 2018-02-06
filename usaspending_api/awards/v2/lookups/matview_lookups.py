@@ -75,63 +75,73 @@ transaction_contracts_mapping = {
     'Recipient Name': 'award_recipient_name',
     'Start Date': 'award_period_of_performance_start_date',
     'End Date': 'award_period_of_performance_current_end_date',
-    'Award Amount': 'award_total_obligation',
+    'Award Amount': 'total_obligation',
     'Contract Award Type': 'award_type_description',
     'Awarding Agency': 'award_awarding_toptier_agency_name',
-    'Awarding Sub Agency': 'award_awarding_subtier_agency_name',
-    'Funding Agency': 'award_funding_toptier_agency_name',  # Leave in for possible future use
-    'Funding Sub Agency': 'award_funding_subtier_agency_name',  # Leave in for possible future use
+    'Awarding Sub Agency': 'award_awarding_agency_name',
+    # 'Funding Agency': 'award_funding_toptier_agency_name',  # Leave in for possible future use
+    # 'Funding Sub Agency': 'award_funding_subtier_agency_name',  # Leave in for possible future use'Award ID': 'piid',
+    # other potential maps
+    # 'Recipient Name': 'awards__recipient_name',
+    # 'Start Date': 'awards__period_of_performance_start_date',
+    # 'End Date': 'awards__period_of_performance_current_end_date',
+    # 'Award Amount': 'total_obligation',
+    # 'Contract Award Type': 'awards__type_description',
+    # 'Awarding Agency': 'awards__awarding_toptier_agency_name',
+    # 'Awarding Sub Agency': 'awards__awarding_subtier_agency_name',
+    # 'Funding Agency': 'awards__funding_toptier_agency_name',  # Leave in for possible future use
+    # 'Funding Sub Agency': 'awards__funding_subtier_agency_name',  # Leave in for possible future use
 }
 
 grant_transaction_mapping = {
     'Award ID': 'fain',
-    'Recipient Name': 'award_recipient_name',
-    'Start Date': 'award_period_of_performance_start_date',
-    'End Date': 'award_period_of_performance_current_end_date',
-    'Award Amount': 'award_total_obligation',
-    'Awarding Agency': 'award_awarding_toptier_agency_name',
-    'Awarding Sub Agency': 'award_awarding_subtier_agency_name',
-    'Award Type': 'award_type_description',
-    'Funding Agency': 'award_funding_toptier_agency_name',  # Leave in for possible future use
-    'Funding Sub Agency': 'award_funding_subtier_agency_name',  # Leave in for possible future use
+    'Recipient Name': 'awards__recipient__name',
+    'Start Date': 'awards__period_of_performance_start_date',
+    'End Date': 'awards__period_of_performance_current_end_date',
+    'Award Amount': 'awards__total_obligation',
+    'Awarding Agency': 'awards__awarding_toptier_agency_name',
+    'Awarding Sub Agency': 'awards__awarding_subtier_agency_name',
+    'Award Type': 'awards__type_description',
+    'Funding Agency': 'awards__funding_toptier_agency_name',  # Leave in for possible future use
+    'Funding Sub Agency': 'awards__funding_subtier_agency_name',  # Leave in for possible future use
 }
 
 loan_transaction_mapping = {
     'Award ID': 'fain',
-    'Recipient Name': 'award_recipient_name',
-    'Issued Date': 'award_action_date',
-    'Loan Value': 'award_face_value_loan_guarantee',
-    'Subsidy Cost': 'award_original_loan_subsidy_cost',
-    'Awarding Agency': 'award_awarding_toptier_agency_name',
-    'Awarding Sub Agency': 'award_awarding_subtier_agency_name',
-    'Funding Agency': 'award_funding_toptier_agency_name',  # Leave in for possible future use
-    'Funding Sub Agency': 'award_funding_subtier_agency_name',  # Leave in for possible future use
+    'Recipient Name': 'awards__recipient__name',
+    'Issued Date': 'awards__action_date',
+    'Loan Value': 'awards__face_value_loan_guarantee',
+    'Subsidy Cost': 'awards__original_loan_subsidy_cost',
+    'Awarding Agency': 'awards__awarding_toptier_agency_name',
+    'Awarding Sub Agency': 'awards__awarding_subtier_agency_name',
+    'Funding Agency': 'awards__funding_toptier_agency_name',  # Leave in for possible future use
+    'Funding Sub Agency': 'awards__funding_subtier_agency_name',  # Leave in for possible future use
 }
 
 direct_payment_transaction_mapping = {
     'Award ID': 'fain',
-    'Recipient Name': 'award_recipient_name',
-    'Start Date': 'award_period_of_performance_start_date',
-    'End Date': 'award_period_of_performance_current_end_date',
-    'Award Amount': 'award_total_obligation',
-    'Awarding Agency': 'award_awarding_toptier_agency_name',
-    'Awarding Sub Agency': 'award_awarding_subtier_agency_name',
-    'Award Type': 'award_type_description',
-    'Funding Agency': 'award_funding_toptier_agency_name',  # Leave in for possible future use
-    'Funding Sub Agency': 'award_funding_subtier_agency_name',  # Leave in for possible future use
+    'Recipient Name': 'awards__recipient__name',
+    'Start Date': 'awards__period_of_performance_start_date',
+    'End Date': 'awards__period_of_performance_current_end_date',
+    'Award Amount': 'awards__total_obligation',
+    'Awarding Agency': 'awards__awarding_toptier_agency_name',
+    'Awarding Sub Agency': 'awards__awarding_subtier_agency_name',
+    'Award Type': 'awards__type_description',
+    'Funding Agency': 'awards__funding_toptier_agency_name',  # Leave in for possible future use
+    'Funding Sub Agency': 'awards__funding_subtier_agency_name',  # Leave in for possible future use
 }
 
 other_transaction_mapping = {
     'Award ID': 'fain',
-    'Recipient Name': 'award_recipient_name',
-    'Start Date': 'award_period_of_performance_start_date',
-    'End Date': 'award_period_of_performance_current_end_date',
-    'Award Amount': 'award_total_obligation',
-    'Awarding Agency': 'award_awarding_toptier_agency_name',
-    'Awarding Sub Agency': 'award_awarding_subtier_agency_name',
-    'Award Type': 'award_type_description',
-    'Funding Agency': 'award_funding_toptier_agency_name',  # Leave in for possible future use
-    'Funding Sub Agency': 'award_funding_subtier_agency_name',  # Leave in for possible future use
+    'Recipient Name': 'awards__recipient__name',
+    'Start Date': 'awards__period_of_performance_start_date',
+    'End Date': 'awards__period_of_performance_current_end_date',
+    'Award Amount': 'awards__total_obligation',
+    'Awarding Agency': 'awards__awarding_toptier_agency_name',
+    'Awarding Sub Agency': 'awards__awarding_subtier_agency_name',
+    'Award Type': 'awards__type_description',
+    'Funding Agency': 'awards__funding_toptier_agency_name',  # Leave in for possible future use
+    'Funding Sub Agency': 'awards__funding_subtier_agency_name',  # Leave in for possible future use
 }
 
 transaction_assistance_mapping = {**grant_transaction_mapping, **loan_transaction_mapping,
