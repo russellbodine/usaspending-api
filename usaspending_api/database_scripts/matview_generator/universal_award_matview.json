@@ -131,34 +131,34 @@
       "columns": [{"name": "\"type\""}]
     }, {
       "name": "ordered_type",
-      "columns": [{"name": "\"type\"", "order": "DESC NULLS LAST"}]
+      "columns": [{"name": "\"type\"", "order": "DESC"}]
     }, {
       "name": "ordered_type_desc",
-      "columns": [{"name": "\"type_description\"", "order": "DESC NULLS LAST"}]
+      "columns": [{"name": "\"type_description\"", "order": "DESC"}]
     }, {
       "name": "ordered_fain",
       "where": "\"fain\" IS NOT NULL",
-      "columns": [{"name": "UPPER(\"fain\")", "order": "DESC NULLS LAST"}]
+      "columns": [{"name": "UPPER(\"fain\")", "order": "DESC"}]
     }, {
       "name": "ordered_piid",
       "where": "\"piid\" IS NOT NULL",
-      "columns": [{"name": "UPPER(\"piid\")", "order": "DESC NULLS LAST"}]
+      "columns": [{"name": "UPPER(\"piid\")", "order": "DESC"}]
     }, {
       "name": "total_obligation",
       "where": "\"total_obligation\" IS NOT NULL",
       "columns": [{"name": "\"total_obligation\""}]
     }, {
       "name": "ordered_total_obligation",
-      "columns": [{"name": "\"total_obligation\"", "order": "DESC NULLS LAST"}]
+      "columns": [{"name": "\"total_obligation\"", "order": "DESC"}]
     }, {
       "name": "total_obl_bin",
       "columns": [{"name": "\"total_obl_bin\""}]
     }, {
       "name": "period_of_performance_start_date",
-      "columns": [{"name": "\"period_of_performance_start_date\"", "order": "DESC NULLS LAST"}]
+      "columns": [{"name": "\"period_of_performance_start_date\"", "order": "DESC"}]
     }, {
       "name": "period_of_performance_current_end_date",
-      "columns": [{"name": "\"period_of_performance_current_end_date\"", "order": "DESC NULLS LAST"}]
+      "columns": [{"name": "\"period_of_performance_current_end_date\"", "order": "DESC"}]
     }, {
       "name": "gin_recipient_name",
       "method": "GIN",
@@ -177,24 +177,24 @@
       "columns": [{"name": "\"parent_recipient_unique_id\""}]
     }, {
       "name": "action_date",
-      "columns": [{"name": "\"action_date\"", "order": "DESC NULLS LAST"}]
+      "columns": [{"name": "\"action_date\"", "order": "DESC"}]
     }, {
       "name": "fiscal_year",
-      "columns": [{"name": "\"fiscal_year\"", "order": "DESC NULLS LAST"}]
+      "columns": [{"name": "\"fiscal_year\"", "order": "DESC"}]
     }, {
       "name": "awarding_agency_id",
       "where": "\"awarding_agency_id\" IS NOT NULL",
-      "columns": [{"name": "\"awarding_agency_id\"", "order": "ASC NULLS LAST"}]
+      "columns": [{"name": "\"awarding_agency_id\"", "order": "ASC"}]
     }, {
       "name": "funding_agency_id",
       "where": "\"funding_agency_id\" IS NOT NULL",
-      "columns": [{"name": "\"funding_agency_id\"", "order": "ASC NULLS LAST"}]
+      "columns": [{"name": "\"funding_agency_id\"", "order": "ASC"}]
     }, {
       "name": "ordered_awarding_toptier_agency_name",
-      "columns": [{"name": "\"awarding_toptier_agency_name\"", "order": "DESC NULLS LAST"}]
+      "columns": [{"name": "\"awarding_toptier_agency_name\"", "order": "DESC"}]
     }, {
       "name": "ordered_awarding_subtier_agency_name",
-      "columns": [{"name": "\"awarding_subtier_agency_name\"", "order": "DESC NULLS LAST"}]
+      "columns": [{"name": "\"awarding_subtier_agency_name\"", "order": "DESC"}]
     }, {
       "name": "awarding_toptier_agency_name",
       "where": "\"awarding_toptier_agency_name\" IS NOT NULL",
