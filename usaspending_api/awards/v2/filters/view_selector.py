@@ -6,7 +6,7 @@ from usaspending_api.awards.models_matviews import SummaryTransactionGeoView
 from usaspending_api.awards.models_matviews import SummaryTransactionMonthView
 from usaspending_api.awards.models_matviews import SummaryTransactionView
 from usaspending_api.awards.models_matviews import SummaryView
-from usaspending_api.awards.models_matviews import UniversalAwardView
+from usaspending_api.awards.models_matviews import UniversalAwardView, UniversalAwardTransactionView
 from usaspending_api.awards.models_matviews import UniversalTransactionView
 from usaspending_api.awards.v2.filters.filter_helpers import can_use_month_aggregation, can_use_total_obligation_enum
 from usaspending_api.awards.v2.filters.matview_filters import matview_search_filter
@@ -157,6 +157,35 @@ MATVIEW_SELECTOR = {
         'prevent_values': {},
         'examine_values': {},
         'model': UniversalAwardView,
+     },
+    'UniversalAwardTransactionView': {
+        'allowed_filters': [
+            'keyword',
+            'time_period',
+            'award_type_codes',
+            'agencies',
+            'legal_entities',
+            'recipient_search_text',
+            'recipient_scope',
+            'recipient_locations',
+            'recipient_type_names',
+            'place_of_performance_scope',
+            'place_of_performance_locations',
+            'award_amounts',
+            'award_ids',
+            'program_numbers',
+            'naics_codes',
+            'psc_codes',
+            'contract_pricing_type_codes',
+            'set_aside_type_codes',
+            'extent_competed_type_codes',
+            'federal_account_ids',
+            'object_class',
+            'program_activity'
+            ],
+        'prevent_values': {},
+        'examine_values': {},
+        'model': UniversalAwardTransactionView,
     }
 }
 
@@ -242,8 +271,11 @@ def spending_by_geography(filters):
     return queryset, model
 
 
-def spending_by_award_count(filters):
-    view_chain = ['SummaryAwardView', 'UniversalAwardView']
+def spending_by_award_count(filters, transaction_action_date):
+    if transaction_action_date:
+        view_chain = ['SummaryAwardView', 'UniversalAwardView']
+    else:
+        view_chain = ['SummaryAwardView', 'UniversalAwardTransactionView']
     model = None
     for view in view_chain:
         if can_use_view(filters, view):

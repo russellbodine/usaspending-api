@@ -7,6 +7,8 @@ from usaspending_api.references.models import PSC
 from usaspending_api.accounts.views.federal_accounts_v2 import filter_on
 from .filter_helpers import date_or_fy_queryset, total_obligation_queryset
 from usaspending_api.awards.models import FinancialAccountsByAwards
+from usaspending_api.awards.models_matviews import UniversalAwardTransactionView
+
 
 
 logger = logging.getLogger(__name__)
@@ -69,7 +71,12 @@ def matview_search_filter(filters, model):
             queryset = queryset.filter(compound_or)
 
         elif key == "time_period":
-            success, or_queryset = date_or_fy_queryset(value, model, "fiscal_year",
+            if model == UniversalAwardTransactionView:
+                success, or_queryset = date_or_fy_queryset(value, model, "transaction_fiscal_year",
+                                                           "transaction_action_date")
+
+            else:
+                success, or_queryset = date_or_fy_queryset(value, model, "fiscal_year",
                                                        "action_date")
             if success:
                 queryset &= or_queryset

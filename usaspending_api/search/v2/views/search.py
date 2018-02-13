@@ -16,7 +16,7 @@ from fiscalyear import FiscalDate
 from usaspending_api.common.exceptions import ElasticsearchConnectionException
 from usaspending_api.common.exceptions import InvalidParameterException
 from usaspending_api.common.helpers import generate_fiscal_month, get_simple_pagination_metadata
-from usaspending_api.awards.models_matviews import UniversalAwardView
+from usaspending_api.awards.models_matviews import UniversalAwardView, UniversalAwardTransactionView
 from usaspending_api.awards.models_matviews import UniversalTransactionView
 from usaspending_api.awards.v2.filters.location_filter_geocode import geocode_filter_locations
 from usaspending_api.awards.v2.filters.matview_filters import matview_search_filter
@@ -600,6 +600,7 @@ class SpendingByAwardVisualizationViewSet(APIView):
         json_request = request.data
         fields = json_request.get("fields", None)
         filters = json_request.get("filters", None)
+        transaction_action_date = json_request.get("transaction_action_date", None)
         order = json_request.get("order", "asc")
         limit = json_request.get("limit", 10)
         page = json_request.get("page", 1)
@@ -625,7 +626,10 @@ class SpendingByAwardVisualizationViewSet(APIView):
             raise InvalidParameterException("Sort value not found in fields: {}".format(sort))
 
         # build sql query filters
-        queryset = matview_search_filter(filters, UniversalAwardView).values()
+        if transaction_action_date:
+            queryset = matview_search_filter(filters, UniversalAwardTransactionView).values()
+        else:
+            queryset = matview_search_filter(filters, UniversalAwardView).values()
 
         values = {'award_id', 'piid', 'fain', 'uri', 'type'}  # always get at least these columns
         for field in fields:
@@ -650,7 +654,14 @@ class SpendingByAwardVisualizationViewSet(APIView):
             if order == 'desc':
                 sort_filters = ['-' + sort_filter for sort_filter in sort_filters]
 
-            queryset = queryset.order_by(*sort_filters).values(*list(values))
+            if transaction_action_date:
+                sort_filters = ["award_id"] + sort_filters
+
+                queryset = queryset.order_by(*sort_filters).distinct("award_id").values(*list(values))
+            else:
+                queryset = queryset.order_by(*sort_filters).values(*list(values))
+
+        print(queryset.query)
 
         limited_queryset = queryset[lower_limit:upper_limit + 1]
         has_next = len(limited_queryset) > limit
@@ -665,7 +676,7 @@ class SpendingByAwardVisualizationViewSet(APIView):
             elif award['type'] in non_loan_assistance_type_mapping:  # assistance data
                 for field in fields:
                     row[field] = award.get(non_loan_assistance_award_mapping.get(field))
-            elif (award['type'] is None and award['piid']) or award['type'] in contract_type_mapping:  # IDV + contract
+            elif (award['type'] is '' and award['piid']) or award['type'] in contract_type_mapping:  # IDV + contract
                 for field in fields:
                     row[field] = award.get(award_contracts_mapping.get(field))
 
@@ -694,20 +705,27 @@ class SpendingByAwardCountVisualizationViewSet(APIView):
         """Return all budget function/subfunction titles matching the provided search text"""
         json_request = request.data
         filters = json_request.get("filters", None)
+        transaction_action_date = json_request.get("transaction_action_date", None)
+
         if filters is None:
             raise InvalidParameterException("Missing one or more required request parameters: filters")
-
-        queryset, model = spending_by_award_count(filters)
+        print(transaction_action_date)
+        queryset, model = spending_by_award_count(filters, transaction_action_date)
         if model == 'SummaryAwardView':
             queryset = queryset \
                 .values("category") \
                 .annotate(category_count=Sum('counts'))
         else:
+            if transaction_action_date:
+                queryset = queryset.distinct("award_id")
+
             # for IDV CONTRACTS category is null. change to contract
             queryset = queryset \
                 .values('category') \
                 .annotate(category_count=Count(Coalesce('category', Value('contract')))) \
                 .values('category', 'category_count')
+
+        print(queryset.query)
 
         results = {"contracts": 0, "grants": 0, "direct_payments": 0, "loans": 0, "other": 0}
 
