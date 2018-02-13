@@ -41,9 +41,10 @@ def csv_row_emitter(body, download_job):
 
 
 class CsvSource:
-    def __init__(self, model_type, file_type):
+    def __init__(self, model_type, file_type, file_descrip):
         self.model_type = model_type
         self.file_type = file_type
+        self.file_descrip = file_descrip
         self.human_names = download_column_historical_lookups.human_names[
             model_type][file_type]
         self.query_paths = download_column_historical_lookups.query_paths[
@@ -94,15 +95,11 @@ def write_csvs(download_job, file_name, columns, sources):
 
         logger.debug('Generating {}'.format(file_name))
 
-        zstream.write_iter('contracts.csv',
-                           csv_row_emitter(sources[0].row_emitter(columns),
-                                           download_job))
-        logger.debug('wrote contracts.csv')
-
-        zstream.write_iter('assistance.csv',
-                           csv_row_emitter(sources[1].row_emitter(columns),
-                                           download_job))
-        logger.debug('wrote assistance.csv')
+        for source in sources:
+            zstream.write_iter('{}.csv'.format(source.file_descrip),
+                               csv_row_emitter(source.row_emitter(columns),
+                               download_job))
+            logger.debug('wrote %s.csv' % source.file_descrip)
 
         if settings.IS_LOCAL:
 

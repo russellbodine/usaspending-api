@@ -10,7 +10,7 @@ from rest_framework.exceptions import NotFound, ParseError
 from rest_framework_extensions.cache.decorators import cache_response
 
 from usaspending_api.awards.models import Award, TransactionNormalized
-from usaspending_api.awards.v2.filters.award import award_filter
+from usaspending_api.awards.v2.filters.award import award_filter, subaward_filter
 from usaspending_api.awards.v2.filters.transaction import transaction_filter
 from usaspending_api.awards.v2.filters.view_selector import download_transaction_count
 from usaspending_api.common.exceptions import InvalidParameterException
@@ -111,8 +111,8 @@ def verify_requested_columns_available(sources, requested):
 
 class DownloadAwardsViewSet(BaseDownloadViewSet):
     def get_csv_sources(self, json_request):
-        d1_source = csv_selection.CsvSource('award', 'd1')
-        d2_source = csv_selection.CsvSource('award', 'd2')
+        d1_source = csv_selection.CsvSource('award', 'd1', 'contracts')
+        d2_source = csv_selection.CsvSource('award', 'd2', 'assistance')
         verify_requested_columns_available((d1_source, d2_source), json_request['columns'])
         filters = json_request['filters']
         queryset = award_filter(filters)
@@ -123,11 +123,26 @@ class DownloadAwardsViewSet(BaseDownloadViewSet):
     DOWNLOAD_NAME = 'awards'
 
 
+class DownloadSubAwardsViewSet(BaseDownloadViewSet):
+    def get_csv_sources(self, json_request):
+        (d1_source, d2_source) = DownloadAwardsViewSet.get_csv_sources(self, json_request)
+        d1_subaward_source = csv_selection.CsvSource('subaward', 'd1', 'contracts_subawards')
+        d2_subaward_source = csv_selection.CsvSource('subaward', 'd2', 'assistance_subawards')
+        verify_requested_columns_available((d1_subaward_source, d2_subaward_source), json_request['columns'])
+        filters = json_request['filters']
+        queryset = subaward_filter(filters)
+        d1_subaward_source.queryset = queryset.filter(award__in=d1_source.queryset)
+        d2_subaward_source.queryset = queryset.filter(award__in=d2_source.queryset)
+        return (d1_source, d2_source, d1_subaward_source, d2_subaward_source)
+
+    DOWNLOAD_NAME = 'subawards'
+
+
 class DownloadTransactionsViewSet(BaseDownloadViewSet):
     def get_csv_sources(self, json_request):
         limit = parse_limit(json_request)
-        contract_source = csv_selection.CsvSource('transaction', 'd1')
-        assistance_source = csv_selection.CsvSource('transaction', 'd2')
+        contract_source = csv_selection.CsvSource('transaction', 'd1', 'contracts')
+        assistance_source = csv_selection.CsvSource('transaction', 'd2', 'assistance')
         verify_requested_columns_available((contract_source, assistance_source), json_request['columns'])
         filters = json_request['filters']
 

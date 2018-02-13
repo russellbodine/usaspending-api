@@ -1,6 +1,6 @@
 from django.db.models import Q
 
-from usaspending_api.awards.models import Award, LegalEntity, FinancialAccountsByAwards
+from usaspending_api.awards.models import Award, Subaward, LegalEntity, FinancialAccountsByAwards
 from usaspending_api.references.models import NAICS, PSC
 from usaspending_api.common.exceptions import InvalidParameterException
 from usaspending_api.awards.v2.filters.location_filter_geocode import geocode_filter_locations
@@ -8,6 +8,13 @@ from usaspending_api.awards.v2.filters.location_filter_geocode import geocode_fi
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+def subaward_filter(filters):
+    """Thus far, we aren't filtering on any subaward fields."""
+
+    queryset = Subaward.objects.all()
+    return queryset
 
 
 # TODO: Performance when multiple false values are initially provided
