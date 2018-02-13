@@ -111,8 +111,8 @@ def verify_requested_columns_available(sources, requested):
 
 class DownloadAwardsViewSet(BaseDownloadViewSet):
     def get_csv_sources(self, json_request):
-        d1_source = csv_selection.CsvSource('award', 'd1', 'contracts')
-        d2_source = csv_selection.CsvSource('award', 'd2', 'assistance')
+        d1_source = csv_selection.CsvSource('award', 'd1', 'contracts_prime_awards')
+        d2_source = csv_selection.CsvSource('award', 'd2', 'assistance_prime_awards')
         verify_requested_columns_available((d1_source, d2_source), json_request['columns'])
         filters = json_request['filters']
         queryset = award_filter(filters)
@@ -141,8 +141,8 @@ class DownloadSubAwardsViewSet(BaseDownloadViewSet):
 class DownloadTransactionsViewSet(BaseDownloadViewSet):
     def get_csv_sources(self, json_request):
         limit = parse_limit(json_request)
-        contract_source = csv_selection.CsvSource('transaction', 'd1', 'contracts')
-        assistance_source = csv_selection.CsvSource('transaction', 'd2', 'assistance')
+        contract_source = csv_selection.CsvSource('transaction', 'd1', 'contracts_prime_transactions')
+        assistance_source = csv_selection.CsvSource('transaction', 'd2', 'assistance_prime_transactions')
         verify_requested_columns_available((contract_source, assistance_source), json_request['columns'])
         filters = json_request['filters']
 
