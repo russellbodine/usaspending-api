@@ -61,7 +61,8 @@
           "type": "text"
         },
         "award_description": {
-          "type": "text"
+          "type": "text",
+          "fielddata": true
         },
 
         "product_or_service_code": {
