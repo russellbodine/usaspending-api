@@ -59,12 +59,12 @@ def award_data(db):
     mommy.make('references.Agency', id=3, toptier_flag=False)
 
     # Create Awards
-    award1 = mommy.make('awards.Award', piid='ABC123', category='contracts')
+    award1 = mommy.make('awards.Award', id=1, piid='ABC123', category='contracts')
     mommy.make('awards.Subaward', award=award1, subaward_number='ABC123-1')
     mommy.make('awards.Subaward', award=award1, subaward_number='ABC123-2')
-    award2 = mommy.make('awards.Award', piid='XYZ89', category='contracts')
+    award2 = mommy.make('awards.Award', id=2, piid='XYZ89', category='contracts')
     mommy.make('awards.Subaward', award=award2, subaward_number='XYZ123-1')
-    award3 = mommy.make('awards.Award', fain='102030405', category='assistance')
+    award3 = mommy.make('awards.Award', id=3, fain='102030405', category='assistance')
     mommy.make('awards.Subaward', award=award3, subaward_number='102030405-1')
     mommy.make('awards.Subaward', award=award3, subaward_number='102030405-2')
     mommy.make('awards.Subaward', award=award3, subaward_number='102030405-3')
@@ -73,10 +73,12 @@ def award_data(db):
     trann1 = mommy.make(TransactionNormalized, award=award1, modification_number=1, awarding_agency=aa1)
     trann2 = mommy.make(TransactionNormalized, award=award2, modification_number=1, awarding_agency=aa2)
     trann3 = mommy.make(TransactionNormalized, award=award3, modification_number=1, awarding_agency=aa2)
+    trann2a = mommy.make(TransactionNormalized, award=award2, modification_number=2, awarding_agency=aa2)
 
     # Create TransactionContract
     mommy.make(TransactionFPDS, transaction=trann1, piid='tc1piid')
     mommy.make(TransactionFPDS, transaction=trann2, piid='tc2piid')
+    mommy.make(TransactionFPDS, transaction=trann2a, piid='tc2piid')
 
     # Create TransactionAssistance
     mommy.make(TransactionFABS, transaction=trann3, fain='ta1fain')
@@ -86,9 +88,8 @@ def award_data(db):
 
 
 @pytest.mark.django_db
-@pytest.mark.skip
 def test_download_transactions_v2_endpoint(client, award_data):
-    """test the transaction endpoint."""
+    """Verify that the transaction endpoint exists."""
 
     resp = client.post('/api/v2/download/transactions',
                        content_type='application/json',
@@ -102,9 +103,8 @@ def test_download_transactions_v2_endpoint(client, award_data):
 
 
 @pytest.mark.django_db
-@pytest.mark.skip
 def test_download_awards_v2_endpoint(client, award_data):
-    """test the awards endpoint."""
+    """Verify that the awards endpoint exists."""
 
     resp = client.post('/api/v2/download/awards',
                        content_type='application/json',
@@ -144,12 +144,44 @@ def test_download_subawards_v2_endpoint_results(client, award_data):
                           }))
     resp = client.get('/api/v2/download/status/?file_name={}'.format(dl_resp.json()['file_name']))
     assert resp.status_code == status.HTTP_200_OK
-    assert resp.json()['total_rows'] == 3
+    assert resp.json()['total_rows'] == 9
     assert resp.json()['total_columns'] > 100
 
 
 @pytest.mark.django_db
-@pytest.mark.skip
+def test_download_subawards_v2_endpoint_payload(client, award_data):
+    """test that the subawards endpoint responds to filters and column lists."""
+
+    dl_resp = client.post('/api/v2/download/subawards',
+                          content_type='application/json',
+                          data=json.dumps({
+                              "filters": {},
+                              "columns": []
+                          }))
+    resp0 = client.get('/api/v2/download/status/?file_name={}'.format(dl_resp.json()['file_name']))
+
+    dl_resp = client.post('/api/v2/download/subawards',
+                          content_type='application/json',
+                          data=json.dumps({
+                              "filters": {},
+                              "columns": ['award_id_piid', 'award_id_fain', 'subaward_number'],
+                          }))
+    resp1 = client.get('/api/v2/download/status/?file_name={}'.format(dl_resp.json()['file_name']))
+    assert resp1.status_code == status.HTTP_200_OK
+    assert resp1.json()['total_columns'] < resp0.json()['total_columns']
+
+    dl_resp = client.post('/api/v2/download/subawards',
+                          content_type='application/json',
+                          data=json.dumps({
+                              "filters": {'award_ids': ['ABC123']},
+                              "columns": [],
+                          }))
+    resp2 = client.get('/api/v2/download/status/?file_name={}'.format(dl_resp.json()['file_name']))
+    assert resp2.status_code == status.HTTP_200_OK
+    assert resp2.json()['total_rows'] < resp0.json()['total_rows']
+
+
+@pytest.mark.django_db
 def test_download_transactions_v2_status_endpoint(client, award_data):
     """Test the transaction status endpoint."""
 
@@ -163,12 +195,11 @@ def test_download_transactions_v2_status_endpoint(client, award_data):
     resp = client.get('/api/v2/download/status/?file_name={}'.format(dl_resp.json()['file_name']))
 
     assert resp.status_code == status.HTTP_200_OK
-    assert resp.json()['total_rows'] == 9
+    assert resp.json()['total_rows'] == 4
     assert resp.json()['total_columns'] > 100
 
 
 @pytest.mark.django_db
-@pytest.mark.skip
 def test_download_awards_v2_status_endpoint(client, award_data):
     """Test the transaction status endpoint."""
 
@@ -187,7 +218,6 @@ def test_download_awards_v2_status_endpoint(client, award_data):
 
 
 @pytest.mark.django_db
-@pytest.mark.skip
 def test_download_transactions_v2_endpoint_column_limit(client, award_data):
     """Test the transaction status endpoint's col selection."""
 
@@ -200,12 +230,11 @@ def test_download_transactions_v2_endpoint_column_limit(client, award_data):
                           }))
     resp = client.get('/api/v2/download/status/?file_name={}'.format(dl_resp.json()['file_name']))
     assert resp.status_code == status.HTTP_200_OK
-    assert resp.json()['total_rows'] == 3
+    assert resp.json()['total_rows'] == 4
     assert resp.json()['total_columns'] == 2
 
 
 @pytest.mark.django_db
-@pytest.mark.skip
 def test_download_transactions_v2_endpoint_column_filtering(client, award_data):
     """Test the transaction status endpoint's filtering."""
 
@@ -223,7 +252,7 @@ def test_download_transactions_v2_endpoint_column_filtering(client, award_data):
                           }))
     resp = client.get('/api/v2/download/status/?file_name={}'.format(dl_resp.json()['file_name']))
     assert resp.status_code == status.HTTP_200_OK
-    assert resp.json()['total_rows'] == 2
+    assert resp.json()['total_rows'] == 1
 
     dl_resp = client.post('/api/v2/download/transactions',
                           content_type='application/json',
@@ -239,7 +268,7 @@ def test_download_transactions_v2_endpoint_column_filtering(client, award_data):
                           }))
     resp = client.get('/api/v2/download/status/?file_name={}'.format(dl_resp.json()['file_name']))
     assert resp.status_code == status.HTTP_200_OK
-    assert resp.json()['total_rows'] == 1
+    assert resp.json()['total_rows'] == 3
 
     dl_resp = client.post('/api/v2/download/transactions',
                           content_type='application/json',
@@ -261,10 +290,9 @@ def test_download_transactions_v2_endpoint_column_filtering(client, award_data):
                           }))
     resp = client.get('/api/v2/download/status/?file_name={}'.format(dl_resp.json()['file_name']))
     assert resp.status_code == status.HTTP_200_OK
-    assert resp.json()['total_rows'] == 3
+    assert resp.json()['total_rows'] == 4
 
 
-@pytest.mark.skip
 def test_download_transactions_v2_bad_column_list_raises(client):
     """Test that bad column list inputs raise appropriate responses."""
 
@@ -277,7 +305,6 @@ def test_download_transactions_v2_bad_column_list_raises(client):
     assert 'modification_number' not in resp.json()['detail']
 
 
-@pytest.mark.skip
 def test_download_transactions_v2_bad_filter_raises(client):
     """Test that bad filter inputs raise appropriate responses."""
 
@@ -288,7 +315,6 @@ def test_download_transactions_v2_bad_filter_raises(client):
     assert 'Invalid filter' in resp.json()['detail']
 
 
-@pytest.mark.skip
 def test_download_transactions_v2_bad_filter_type_raises(client):
     """Test filters sent as wrong data type"""
 
@@ -299,7 +325,6 @@ def test_download_transactions_v2_bad_filter_type_raises(client):
     assert 'Invalid filter' in resp.json()['detail']
 
 
-@pytest.mark.skip
 def test_download_transactions_v2_bad_filter_shape_raises(client):
     """Test filter with wrong internal shape"""
 
@@ -319,7 +344,6 @@ def test_download_transactions_v2_bad_filter_shape_raises(client):
 
 
 @pytest.mark.django_db
-@pytest.mark.skip
 def test_download_status_nonexistent_file_404(client):
     """Requesting status of nonexistent file should produce HTTP 404"""
 
@@ -341,7 +365,7 @@ def test_download_transactions_limit(client, award_data):
                           }))
     resp = client.get('/api/v2/download/status/?file_name={}'.format(dl_resp.json()['file_name']))
     assert resp.status_code == status.HTTP_200_OK
-    assert resp.json()['total_rows'] == 2
+    assert resp.json()['total_rows'] == 3
 
 
 def test_download_transactions_bad_limit(client, award_data):
@@ -371,6 +395,7 @@ def test_download_transactions_excessive_limit(client, award_data):
 
 
 @pytest.mark.skip
+@pytest.mark.django_db
 def test_download_transactions_count(client, award_data):
     """Test transaction count endpoint when filters return zero"""
     resp = client.post('/api/v2/download/count',

@@ -9,7 +9,6 @@ from rest_framework.views import APIView
 from rest_framework.exceptions import NotFound, ParseError
 from rest_framework_extensions.cache.decorators import cache_response
 
-from usaspending_api.awards.models import Award, TransactionNormalized
 from usaspending_api.awards.v2.filters.award import award_filter, subaward_filter
 from usaspending_api.awards.v2.filters.transaction import transaction_filter
 from usaspending_api.awards.v2.filters.view_selector import download_transaction_count
@@ -58,13 +57,11 @@ class BaseDownloadViewSet(APIView):
         csv_sources = self.get_csv_sources(request.data)
 
         # get timestamped name to provide unique file name
-        timestamped_file_name = self.s3_handler.get_timestamped_filename(
-            self.DOWNLOAD_NAME + '.zip')
+        timestamped_file_name = self.s3_handler.get_timestamped_filename(self.DOWNLOAD_NAME + '.zip')
 
         # create download job in database to track progress. Starts at "ready"
         # status by default.
-        download_job = DownloadJob(job_status_id=JOB_STATUS_DICT['ready'],
-                                   file_name=timestamped_file_name)
+        download_job = DownloadJob(job_status_id=JOB_STATUS_DICT['ready'], file_name=timestamped_file_name)
         download_job.save()
 
         kwargs = {'download_job': download_job,
@@ -77,8 +74,7 @@ class BaseDownloadViewSet(APIView):
             # is not shared with the thread
             csv_selection.write_csvs(**kwargs)
         else:
-            t = threading.Thread(target=csv_selection.write_csvs,
-                                 kwargs=kwargs)
+            t = threading.Thread(target=csv_selection.write_csvs, kwargs=kwargs)
 
             # Thread will stop when csv_selection.write_csvs stops
             t.start()
@@ -98,7 +94,7 @@ def parse_limit(json_request):
         if limit > settings.MAX_DOWNLOAD_LIMIT:
             msg = 'Requested limit {} beyond max supported ({})'
             raise ParseError(msg.format(limit, settings.MAX_DOWNLOAD_LIMIT))
-    return limit   # None is a workable slice argument
+    return limit  # None is a workable slice argument
 
 
 def verify_requested_columns_available(sources, requested):
@@ -111,52 +107,60 @@ def verify_requested_columns_available(sources, requested):
 
 class DownloadAwardsViewSet(BaseDownloadViewSet):
     def get_csv_sources(self, json_request):
-        d1_source = csv_selection.CsvSource('award', 'd1', 'contracts_prime_awards')
-        d2_source = csv_selection.CsvSource('award', 'd2', 'assistance_prime_awards')
-        verify_requested_columns_available((d1_source, d2_source), json_request['columns'])
-        filters = json_request['filters']
-        queryset = award_filter(filters)
-        d1_source.queryset = queryset & Award.objects.filter(latest_transaction__contract_data__isnull=False)
-        d2_source.queryset = queryset & Award.objects.filter(latest_transaction__assistance_data__isnull=False)
-        return d1_source, d2_source
+        sources = (csv_selection.ContractsPrimeAwardsCsvSource(), csv_selection.AssistancePrimeAwardsCsvSource(), )
+        verify_requested_columns_available(sources, json_request['columns'])
+        try:
+            queryset = award_filter(json_request['filters'])
+        except Exception as exc:
+            raise ParseError(detail='Invalid filters: %s' % exc)
+
+        for source in sources:
+            source.queryset = queryset.filter(source.filter)
+        return sources
 
     DOWNLOAD_NAME = 'awards'
 
 
 class DownloadSubAwardsViewSet(BaseDownloadViewSet):
     def get_csv_sources(self, json_request):
-        (d1_source, d2_source) = DownloadAwardsViewSet.get_csv_sources(self, json_request)
-        d1_subaward_source = csv_selection.CsvSource('subaward', 'd1', 'contracts_subawards')
-        d2_subaward_source = csv_selection.CsvSource('subaward', 'd2', 'assistance_subawards')
-        verify_requested_columns_available((d1_subaward_source, d2_subaward_source), json_request['columns'])
-        filters = json_request['filters']
-        queryset = subaward_filter(filters)
-        d1_subaward_source.queryset = queryset.filter(award__in=d1_source.queryset)
-        d2_subaward_source.queryset = queryset.filter(award__in=d2_source.queryset)
-        return (d1_source, d2_source, d1_subaward_source, d2_subaward_source)
+
+        sources = (csv_selection.ContractsPrimeAwardsCsvSource(),
+                   csv_selection.AssistancePrimeAwardsCsvSource(),
+                   csv_selection.ContractsSubAwardsCsvSource(),
+                   csv_selection.AssistanceSubAwardsCsvSource(), )
+        verify_requested_columns_available(sources, json_request['columns'])
+
+        award_queryset = award_filter(json_request['filters'])
+        try:
+            subaward_queryset = subaward_filter(json_request['filters'])
+        except Exception as exc:
+            raise ParseError(detail='Invalid filters: %s' % exc)
+
+        for i in (0, 1):
+            award_source = sources[i]
+            award_source.queryset = award_queryset.filter(award_source.filter)
+            subaward_source = sources[i + 2]
+            subaward_source.queryset = subaward_queryset.filter(award__in=award_source.queryset)
+
+        return sources
 
     DOWNLOAD_NAME = 'subawards'
 
 
 class DownloadTransactionsViewSet(BaseDownloadViewSet):
     def get_csv_sources(self, json_request):
+
+        sources = (csv_selection.ContractsPrimeTransactionsCsvSource(),
+                   csv_selection.AssistancePrimeTransactionsCsvSource(), )
+        verify_requested_columns_available(sources, json_request['columns'])
         limit = parse_limit(json_request)
-        contract_source = csv_selection.CsvSource('transaction', 'd1', 'contracts_prime_transactions')
-        assistance_source = csv_selection.CsvSource('transaction', 'd2', 'assistance_prime_transactions')
-        verify_requested_columns_available((contract_source, assistance_source), json_request['columns'])
-        filters = json_request['filters']
-
-        base_qset = transaction_filter(filters).values_list('id')[:limit]
-
-        # Contract file
-        queryset = TransactionNormalized.objects.filter(id__in=base_qset, contract_data__isnull=False)
-        contract_source.queryset = queryset
-
-        # Assistance file
-        queryset = TransactionNormalized.objects.filter(id__in=base_qset, assistance_data__isnull=False)
-        assistance_source.queryset = queryset
-
-        return contract_source, assistance_source
+        try:
+            base_qset = transaction_filter(json_request['filters'])
+        except Exception as exc:
+            raise ParseError(detail='Invalid filters: %s' % exc)
+        for source in sources:
+            source.queryset = base_qset.filter(source.filter)[:limit]
+        return sources
 
     DOWNLOAD_NAME = 'transactions'
 
@@ -169,14 +173,12 @@ class DownloadStatusViewSet(BaseDownloadViewSet):
         file_name = get_request.get('file_name')
 
         if not file_name:
-            raise InvalidParameterException(
-                'Missing one or more required query parameters: file_name')
+            raise InvalidParameterException('Missing one or more required query parameters: file_name')
 
         return self.get_download_response(file_name=file_name)
 
 
 class DownloadTransactionCountViewSet(APIView):
-
     @cache_response()
     def post(self, request):
         """Returns boolean of whether a download request is greater
@@ -198,8 +200,6 @@ class DownloadTransactionCountViewSet(APIView):
         if total_count and total_count > settings.MAX_DOWNLOAD_LIMIT:
             is_over_limit = True
 
-        result = {
-            "transaction_rows_gt_limit": is_over_limit
-        }
+        result = {"transaction_rows_gt_limit": is_over_limit}
 
         return Response(result)
