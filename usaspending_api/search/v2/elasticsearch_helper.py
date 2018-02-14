@@ -59,11 +59,20 @@ def search_transactions(filters, fields, sort, order, lower_limit, limit):
         '_source': query_fields,
         'from': lower_limit,
         'size': limit,
-        'query': {
-            'query_string': {
-                'query': keyword
-            }
-        },
+        "query": {
+            "multi_match": {
+                "query": keyword,
+                "fields": ["recipient_unique_id",
+                           "parent_recipient_unique_id",
+                           "naics_code",
+                           "naics_description",
+                           "product_or_service_code",
+                           "product_or_service_description",
+                           "award_description",
+                           "recipient_name",
+                           "display_award_id"]
+                }
+            },
         'sort': [{
             query_sort: {
                 'order': order}
@@ -89,14 +98,27 @@ def search_transactions(filters, fields, sort, order, lower_limit, limit):
 
 
 def get_total_results(keyword, sub_index, retries=3):
-    index_name = '{}-{}*'.format(TRANSACTIONS_INDEX_ROOT, sub_index.replace('_', ''))
+    index_name = '{}*'.format(TRANSACTIONS_INDEX_ROOT)
     query = {
-        'query': {
-            'query_string': {
-                'query': keyword
+              "query": {
+                "bool": {
+                  "should": [
+                    { "match": { "recipient_unique_id": keyword }},
+                    { "match": { "parent_recipient_unique_id": keyword }},
+                    { "match": { "naics_code": keyword }},
+                    { "match": { "naics_description": keyword }},
+                    { "match": { "product_or_service_code": keyword }},
+                    { "match": { "product_or_service_description": keyword }},
+                    { "match": { "award_description": keyword }},
+                    { "match": { "recipient_name": keyword }},
+                    { "match": { "display_award_id": keyword }}
+                  ],
+                  "must": [
+                  	{ "match": {"award_category": sub_index }}
+                  	]
+                }
+              }
             }
-        }
-    }
 
     response = es_client_query(index=index_name, body=query, retries=retries)
     if response:
@@ -130,11 +152,20 @@ def get_sum_aggregation_results(keyword, field='transaction_amount'):
     """
     index_name = '{}-*'.format(TRANSACTIONS_INDEX_ROOT)
     query = {
-        'query': {
-            'query_string': {
-                'query': keyword
-            }
-        },
+        "query": {
+            "multi_match": {
+                "query": keyword,
+                "fields": ["recipient_unique_id",
+                           "parent_recipient_unique_id",
+                           "naics_code",
+                           "naics_description",
+                           "product_or_service_code",
+                           "product_or_service_description",
+                           "award_description",
+                           "recipient_name",
+                           "display_award_id"]
+                }
+            },
         'aggs': {
             'transaction_sum': {
                 'sum': {
@@ -175,7 +206,20 @@ def get_download_ids(keyword, field, size=10000):
     for i in range(n_iter):
         query = {
             "_source": [field],
-            "query": {"query_string": {"query": keyword}},
+            "query": {
+                "multi_match": {
+                    "query": keyword,
+                    "fields": ["recipient_unique_id",
+                               "parent_recipient_unique_id",
+                               "naics_code",
+                               "naics_description",
+                               "product_or_service_code",
+                               "product_or_service_description",
+                               "award_description",
+                               "recipient_name",
+                               "display_award_id"]
+                    }
+                },
             "aggs": {
                 "results": {
                     "terms": {
@@ -202,7 +246,20 @@ def get_download_ids(keyword, field, size=10000):
 
 def get_sum_and_count_aggregation_results(keyword):
     index_name = '{}-'.format(TRANSACTIONS_INDEX_ROOT)+'*'
-    query = {"query": {"query_string": {"query": keyword}},
+    query = {"query": {
+                "multi_match": {
+                "query": keyword,
+                "fields": ["recipient_unique_id",
+                           "parent_recipient_unique_id",
+                           "naics_code",
+                           "naics_description",
+                           "product_or_service_code",
+                           "product_or_service_description",
+                           "award_description",
+                           "recipient_name",
+                           "display_award_id"]
+                }
+            },
              "aggs": {
               "prime_awards_obligation_amount": {
                  "sum": {
