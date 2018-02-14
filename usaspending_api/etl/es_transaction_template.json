@@ -82,7 +82,7 @@
         },
         "award_category": {
           "type": "text",
-          "index": false
+          "index": true
         },
         "recipient_unique_id": {
           "type": "text"
