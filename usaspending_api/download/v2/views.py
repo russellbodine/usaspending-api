@@ -136,6 +136,7 @@ class DownloadSubAwardsViewSet(BaseDownloadViewSet):
         except Exception as exc:
             raise ParseError(detail='Invalid filters: %s' % exc)
 
+        # Filter for subawards belonging to prime awards selected
         for i in (0, 1):
             award_source = sources[i]
             award_source.queryset = award_queryset.filter(award_source.filter)
