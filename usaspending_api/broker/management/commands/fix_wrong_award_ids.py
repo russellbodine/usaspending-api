@@ -104,7 +104,7 @@ class Command(BaseCommand):
         # check transaction normalized & subaward references for stale awards
         for award_id in award_ids_to_delete:
             if not example_flag:
-                logger.info('Example of award pk to be deleted: %s' % str(award_ids_to_delete[0]))
+                logger.info('Example of award pk to be deleted: %s' % str(award_id))
                 example_flag = True
 
             if not (TransactionNormalized.objects.filter(award_id=award_id).exists()
