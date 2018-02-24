@@ -79,6 +79,9 @@ class Command(BaseCommand):
 
                 award_obj.generated_unique_award_id = correct_award_id
                 award_obj.save()
+            else:
+                logger.info('Award identifier not updated for %s (pk) and %s (generated identifier)' %
+                            (str(award_obj.id), award_obj.generated_unique_award_id))
 
             # update transaction normalized & subawards awards references
             tx_id_list = [tx['transaction_id'] for tx in correct_award_id_dict[correct_award_id]]
@@ -96,7 +99,7 @@ class Command(BaseCommand):
         logger.info('Finished correcting references to point to consolidated award in ' + str(end - start) + ' seconds')
 
         logger.info('Deleting %s stale awards...' % str(len(award_ids_to_delete)))
-        example_flag = True
+        example_flag = False
         start = timeit.default_timer()
         # check transaction normalized & subaward references for stale awards
         for award_id in award_ids_to_delete:
