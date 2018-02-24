@@ -78,7 +78,8 @@ class Command(BaseCommand):
 
             award_ids_to_delete |= (set(old_award_ids) - {award_obj.id})
 
-            TransactionNormalized.objects.filter(id__in=tx_id_list).update(award_id=award_obj.id)
+            TransactionNormalized.objects.filter(id__in=tx_id_list).update(award_id=award_obj.id,
+                                                                           generated_unique_award_id=correct_award_id)
             Subaward.objects.filter(award_id__in=old_award_ids).update(award_id=award_obj.id)
             FinancialAccountsByAwards.objects.filter(award_id__in=old_award_ids).update(award_id=award_obj.id)
 
