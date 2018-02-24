@@ -14,6 +14,46 @@ logger = logging.getLogger('console')
 exception_logger = logging.getLogger("exceptions")
 
 
+MATVIEW_SQL = """
+drop materialized view if exists wrong_award_ids;
+create materialized view wrong_award_ids as (
+select
+    txn.update_date,
+    txn.generated_unique_award_id,
+    txn.award_id,
+    txf.afa_generated_unique,
+    txf.transaction_id,
+    txf.record_type,
+    'ASST_AW_' || COALESCE(txf.awarding_sub_tier_agency_c,'-NONE-') || '_' || '-NONE-' || '_' || COALESCE(txf.uri, '-NONE-') as correct_generated_unique_award_id
+from transaction_normalized as txn
+    inner join
+    transaction_fabs as txf on txf.transaction_id=txn.id
+where
+    txf.record_type = '1'
+    and
+    txn.generated_unique_award_id != 'ASST_AW_' || COALESCE(txf.awarding_sub_tier_agency_c,'-NONE-') || '_' || '-NONE-' || '_' || COALESCE(txf.uri, '-NONE-')
+
+union all
+
+select
+    txn.update_date,
+    txn.generated_unique_award_id,
+    txn.award_id,
+    txf.afa_generated_unique,
+    txf.transaction_id,
+    txf.record_type,
+    'ASST_AW_' || COALESCE(txf.awarding_sub_tier_agency_c,'-NONE-') || '_' || COALESCE(txf.fain, '-NONE-') || '_' || '-NONE-' as correct_generated_unique_award_id
+from transaction_normalized as txn
+    inner join
+    transaction_fabs as txf on txf.transaction_id=txn.id
+where
+    txf.record_type = '2'
+    and
+    txn.generated_unique_award_id != 'ASST_AW_' || COALESCE(txf.awarding_sub_tier_agency_c,'-NONE-') || '_' || COALESCE(txf.fain, '-NONE-') || '_' || '-NONE-'
+);
+"""
+
+
 class Command(BaseCommand):
     help = "Updates awards based on transactions in the database or based on Award IDs passed in"
 
@@ -23,6 +63,12 @@ class Command(BaseCommand):
         overall_start = timeit.default_timer()
 
         with connection.cursor() as cursor:
+            logger.info('Creating wrong_award_ids matview...')
+            start = timeit.default_timer()
+            cursor.execute(MATVIEW_SQL)
+            end = timeit.default_timer()
+            logger.info('Finished creating wrong_award_ids matview in ' + str(end - start) + ' seconds')
+
             cursor.execute("SELECT * FROM wrong_award_ids")
             bad_txs = dictfetchall(cursor)
 
