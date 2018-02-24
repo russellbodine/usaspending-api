@@ -176,6 +176,8 @@ class Command(BaseCommand):
         end = timeit.default_timer()
         logger.info('Finished updating award category variables in ' + str(end - start) + ' seconds')
 
+        award_ids_to_recalc.append(44673127)  # manually handling subawards that were changed to this award id
+        award_ids_to_recalc.append(45858621)  # manually handling subawards that were changed to this award id
         logger.info('Updating subawards...')
         start = timeit.default_timer()
         update_award_subawards(tuple(award_ids_to_recalc))
