@@ -95,12 +95,15 @@ class Command(BaseCommand):
         end = timeit.default_timer()
         logger.info('Finished correcting references to point to consolidated award in ' + str(end - start) + ' seconds')
 
-        logger.info('Example of award pk to be deleted: %s' % str(award_ids_to_delete[0]))
-
         logger.info('Deleting %s stale awards...' % str(len(award_ids_to_delete)))
+        example_flag = True
         start = timeit.default_timer()
         # check transaction normalized & subaward references for stale awards
         for award_id in award_ids_to_delete:
+            if not example_flag:
+                logger.info('Example of award pk to be deleted: %s' % str(award_ids_to_delete[0]))
+                example_flag = True
+
             if not (TransactionNormalized.objects.filter(award_id=award_id).exists()
                     or Subaward.objects.filter(award_id=award_id).exists()
                     or FinancialAccountsByAwards.objects.filter(award_id=award_id).exists()):
