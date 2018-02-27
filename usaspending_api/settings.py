@@ -281,7 +281,9 @@ CACHE_ENVIRONMENTS = {
         'BACKEND': 'django_redis.cache.RedisCache',
         'LOCATION': 'ELASTICACHE-CONNECTION-STRING',
         'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient'
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            # Note: ELASTICACHE-MASTER-STRING is currently only used by Prod and will be removed in other environments.
+            'MASTER_CACHE': 'ELASTICACHE-MASTER-STRING'
         }
     },
     'local': {

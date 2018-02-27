@@ -33,6 +33,7 @@ pytest==3.0.2
 python-dateutil==2.6.0
 python-json-logger==0.1.6
 pytz==2016.6.1
+django-redis==4.8.0
 requests==2.11.1
 retrying==1.3.3
 six==1.10.0
