@@ -278,16 +278,18 @@ CACHE_ENVIRONMENT = 'disabled'
 CACHE_ENVIRONMENTS = {
     # Elasticache settings are changed during deployment, or can be set manually
     'elasticache': {
-        'BACKEND': 'django_elasticache.memcached.ElastiCache',
+        'BACKEND': 'django_redis.cache.RedisCache',
         'LOCATION': 'ELASTICACHE-CONNECTION-STRING',
-        'TIMEOUT': 'TIMEOUT-IN-SECONDS',
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient'
+        }
     },
     'local': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'locations-loc-mem-cache',
+        'LOCATION': 'locations-loc-mem-cache'
     },
     'disabled': {
-        'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+        'BACKEND': 'django.core.cache.backends.dummy.DummyCache'
     }
 }
 
