@@ -3,14 +3,12 @@ import logging
 from rest_framework_extensions.cache.decorators import CacheResponse
 
 logger = logging.getLogger('console')
-server_logger = logging.getLogger('server')
 
 
 class CustomCacheResponse(CacheResponse):
     def process_cache_response(self, view_instance, view_method, request, args, kwargs):
         key = self.calculate_key(view_instance=view_instance, view_method=view_method,
                                  request=request, args=args, kwargs=kwargs)
-        server_logger.info("Key generated: {}".format(key))
         response = None
         try:
             response = self.cache.get(key)
@@ -32,7 +30,6 @@ class CustomCacheResponse(CacheResponse):
                     msg = 'Problem while writing to cache: path:\'{p}\' data:\'{d}\''
                     logger.exception(msg.format(p=str(request.path), d=str(request.data)))
         else:
-            server_logger.info("Key retrieved from cache: {}".format(key))
             response['Cache-Trace'] = 'hit-cache'
 
         if not hasattr(response, '_closable_objects'):
