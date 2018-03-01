@@ -82,6 +82,8 @@ class LoggingMiddleware(MiddlewareMixin):
         status_code = response.status_code
 
         self.log["status_code"] = status_code
+        self.log["key"] = response.key
+        self.log["cache_trace"] = response["Cache-Trace"]
         self.log["response_ms"] = self.get_response_ms()
         self.log["traceback"] = None
 
@@ -112,6 +114,8 @@ class LoggingMiddleware(MiddlewareMixin):
         """
 
         self.log["status_code"] = 500  # Unable to get status code from exception server return 500 as default
+        self.log["key"] = response.key
+        self.log["cache_trace"] = response["Cache-Trace"]
         self.log["response_ms"] = self.get_response_ms()
         self.log["status"] = 'ERROR'
         self.log["timestamp"] = now().strftime('%d/%m/%y %H:%M:%S')
