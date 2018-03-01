@@ -82,10 +82,14 @@ class LoggingMiddleware(MiddlewareMixin):
         status_code = response.status_code
 
         self.log["status_code"] = status_code
-        self.log["key"] = response.key
-        self.log["cache_trace"] = response["Cache-Trace"]
+        self.log["key"] = response._headers["key"] if "key" in response._headers else ''
         self.log["response_ms"] = self.get_response_ms()
         self.log["traceback"] = None
+        if response._headers:
+            if 'key' in response._headers:
+                self.log["key"] = response._headers['key']
+            if 'cache-trace' in response._headers:
+                self.log["cache_trace"] = response._headers['cache-trace']
 
         if 100 <= status_code < 400:
             # Logged at an INFO level: 1xx (Informational), 2xx (Success), 3xx Redirection
@@ -114,8 +118,6 @@ class LoggingMiddleware(MiddlewareMixin):
         """
 
         self.log["status_code"] = 500  # Unable to get status code from exception server return 500 as default
-        self.log["key"] = response.key
-        self.log["cache_trace"] = response["Cache-Trace"]
         self.log["response_ms"] = self.get_response_ms()
         self.log["status"] = 'ERROR'
         self.log["timestamp"] = now().strftime('%d/%m/%y %H:%M:%S')
