@@ -38,6 +38,7 @@ class CustomCacheResponse(CacheResponse):
         if not hasattr(response, '_closable_objects'):
             response._closable_objects = []
 
+        response['key'] = key
         return response
 
 
