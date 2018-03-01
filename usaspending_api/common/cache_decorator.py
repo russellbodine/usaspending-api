@@ -12,6 +12,8 @@ class CustomCacheResponse(CacheResponse):
         response = None
         try:
             response = self.cache.get(key)
+            logger.info("-------------------------")
+            logger.info(response)
         except Exception as e:
             msg = 'Problem while retriving key [{k}] from cache for path:\'{p}\''
             logger.exception(msg.format(k=key, p=str(request.path)))
@@ -21,6 +23,9 @@ class CustomCacheResponse(CacheResponse):
             response = view_instance.finalize_response(request, response, *args, **kwargs)
             response['Cache-Trace'] = 'no-cache'
             response.render()  # should be rendered, before picklining while storing to cache
+
+            logger.info("***************")
+            logger.info(response)
 
             if not response.status_code >= 400 or self.cache_errors:
                 try:
