@@ -42,6 +42,13 @@ class Command(BaseCommand):
         # logger.info('Updating %s contract awards' % str(len(award_contract_update_id_list)))
 
         award_update_id_list = [int(award_id[0]) for award_id in award_update_id_list]
+
+        logger.info('printing a few ids for testing purposes')
+        if len(award_update_id_list) > 10:
+            logger.info(award_update_id_list[:10])
+        else:
+            logger.info(award_update_id_list)
+
         # award_contract_update_id_list = [int(award_id[0]) for award_id in award_contract_update_id_list]
 
         logger.info('Updating awards to reflect their latest associated transaction info...')
