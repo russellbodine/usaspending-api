@@ -68,8 +68,6 @@ class Command(BaseCommand):
         logger.info('Dropping matview...')
 
         with connection.cursor() as cursor:
-            # cursor.execute("SELECT id FROM fpds_dup_award_ids")
-            # contract_award_ids = cursor.fetchall()
             cursor.execute("DROP MATERIALIZED VIEW fabs_dup_award_ids")
 
         # Done!
