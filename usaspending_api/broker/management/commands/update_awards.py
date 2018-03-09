@@ -27,7 +27,12 @@ class Command(BaseCommand):
         with connection.cursor() as cursor:
             # cursor.execute("SELECT id FROM fpds_dup_award_ids")
             # contract_award_ids = cursor.fetchall()
-            cursor.execute("CREATE MATERIALIZED VIEW fabs_dup_award_ids AS (SELECT DISTINCT id from awards as aw where aw.certified_date != (select action_date from transaction_normalized as txn where txn.id = aw.latest_transaction_id));")
+            cursor.execute("CREATE MATERIALIZED VIEW fabs_dup_award_ids AS ("
+                           "SELECT DISTINCT id from awards as aw "
+                           "where aw.certified_date != ("
+                                "select action_date from transaction_normalized as txn "
+                                "where txn.id = aw.latest_transaction_id)"
+                           ");")
             logger.info('Created matview')
             cursor.execute("SELECT id from fabs_dup_award_ids")
             assistance_award_ids = cursor.fetchall()
