@@ -68,10 +68,6 @@ class Command(BaseCommand):
         update_award_categories(tuple(award_update_id_list))
         end = timeit.default_timer()
         logger.info('Finished updating award category variables in ' + str(end - start) + ' seconds')
-        logger.info('Dropping matview...')
-
-        with connection.cursor() as cursor:
-            cursor.execute("DROP MATERIALIZED VIEW fabs_dup_award_ids")
 
         # Done!
         logger.info('FINISHED')
