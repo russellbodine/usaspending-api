@@ -28,7 +28,8 @@ class Command(BaseCommand):
             # cursor.execute("SELECT id FROM fpds_dup_award_ids")
             # contract_award_ids = cursor.fetchall()
             cursor.execute("SELECT id from awards as aw "
-                           "where aw.certified_date != ("
+                           "where aw.certified_date is Null"
+                           "OR aw.certified_date != ("
                                 "select action_date from transaction_normalized as txn "
                                 "where txn.id = aw.latest_transaction_id)")
             assistance_award_ids = cursor.fetchall()
