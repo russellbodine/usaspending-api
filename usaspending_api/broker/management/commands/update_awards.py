@@ -25,8 +25,7 @@ class Command(BaseCommand):
         logger.info('Starting updates to award data...')
 
         with connection.cursor() as cursor:
-            # cursor.execute("SELECT id FROM fpds_dup_award_ids")
-            # contract_award_ids = cursor.fetchall()
+            # Get all awards that have a transaction that is greater than their certified_date
             cursor.execute("SELECT id from awards as aw "
                            "where aw.certified_date is Null "
                            "OR aw.certified_date != ("
@@ -34,13 +33,9 @@ class Command(BaseCommand):
                                 "where txn.id = aw.latest_transaction_id)")
             assistance_award_ids = cursor.fetchall()
 
-            award_update_id_list = assistance_award_ids  # + contract_award_ids
-            # award_contract_update_id_list = contract_award_ids
+            award_update_id_list = assistance_award_ids
 
-        # logger.info('Number of contract awards: %s' % str(len(contract_award_ids)))
         logger.info('Number of assistance awards: %s' % str(len(assistance_award_ids)))
-        # logger.info('Updating %s awards' % str(len(award_update_id_list)))
-        # logger.info('Updating %s contract awards' % str(len(award_contract_update_id_list)))
 
         award_update_id_list = [int(award_id[0]) for award_id in award_update_id_list]
 
@@ -50,19 +45,11 @@ class Command(BaseCommand):
         else:
             logger.info(award_update_id_list)
 
-        # award_contract_update_id_list = [int(award_id[0]) for award_id in award_contract_update_id_list]
-
         logger.info('Updating awards to reflect their latest associated transaction info...')
         start = timeit.default_timer()
         update_awards(tuple(award_update_id_list))
         end = timeit.default_timer()
         logger.info('Finished updating awards in ' + str(end - start) + ' seconds')
-
-        # logger.info('Updating contract-specific awards to reflect their latest transaction info...')
-        # start = timeit.default_timer()
-        # update_contract_awards(tuple(award_contract_update_id_list))
-        # end = timeit.default_timer()
-        # logger.info('Finished updating contract specific awards in ' + str(end - start) + ' seconds')
 
         logger.info('Updating award category variables...')
         start = timeit.default_timer()
