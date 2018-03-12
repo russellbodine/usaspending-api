@@ -27,11 +27,13 @@ class Command(BaseCommand):
         with connection.cursor() as cursor:
             # Get all awards that have a transaction that is greater than their certified_date
             cursor.execute("SELECT id from awards as aw "
-                           "where aw.certified_date is Null "
-                           "AND aw.latest_transaction_id is not Null "
-                           "OR aw.certified_date != ("
-                                "select action_date from transaction_normalized as txn "
-                                "where txn.id = aw.latest_transaction_id)")
+                           "WHERE aw.latest_transaction_id is not Null "
+                           "AND ("
+                               "aw.certified_date is Null "
+                               "OR aw.certified_date != ("
+                                    "select action_date from transaction_normalized as txn "
+                                    "where txn.id = aw.latest_transaction_id)"
+                           ")")
             assistance_award_ids = cursor.fetchall()
 
             award_update_id_list = assistance_award_ids
