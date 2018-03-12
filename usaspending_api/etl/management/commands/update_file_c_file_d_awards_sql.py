@@ -106,13 +106,13 @@ class Command(BaseCommand):
             FROM financial_accounts_by_awards as faba
             left outer JOIN awards
                 ON award_id = awards.id
-            WHERE (awards.latest_transaction_id IS NULL) --bAD or NOTMAPPED
+            WHERE (awards.latest_transaction_id IS NULL) --BAD or NOTMAPPED
             AND (faba.fain is not Null AND faba.uri is not Null)
             ),
         correct_transactions AS
             (SELECT DISTINCT tn.award_id, tf.fain, tf.uri
             from transaction_normalized as tn
-            left outer join transaction_fabs as tf 
+            join transaction_fabs as tf 
                 on tf.transaction_id = tn.id
             where (tf.fain is not Null AND tf.uri is not Null)
             )
@@ -123,7 +123,6 @@ class Command(BaseCommand):
             AND COALESCE(correct_transactions.uri, '') = COALESCE(bad_faba.uri, '')
             ON CONFLICT ON CONSTRAINT faba_corrector_uc 
                 DO NOTHING
-    
     """
 
     LINK_FILE_C_FILE_D = """
