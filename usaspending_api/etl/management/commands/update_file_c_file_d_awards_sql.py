@@ -123,6 +123,7 @@ class Command(BaseCommand):
             AND COALESCE(correct_transactions.uri, '') = COALESCE(bad_faba.uri, '')
             ON CONFLICT ON CONSTRAINT faba_corrector_uc 
                 DO NOTHING
+        ;
     """
 
     LINK_FILE_C_FILE_D = """
