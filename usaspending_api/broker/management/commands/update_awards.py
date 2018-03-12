@@ -28,6 +28,7 @@ class Command(BaseCommand):
             # Get all awards that have a transaction that is greater than their certified_date
             cursor.execute("SELECT id from awards as aw "
                            "where aw.certified_date is Null "
+                           "AND aw.latest_transaction_id is not Null "
                            "OR aw.certified_date != ("
                                 "select action_date from transaction_normalized as txn "
                                 "where txn.id = aw.latest_transaction_id)")
