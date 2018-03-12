@@ -25,8 +25,12 @@ class Command(BaseCommand):
             curs.execute(self.UNLINK_FILE_C_FILE_D)
             logger.info('FILE_C_FILE_D_UNLINKED. {} file C rows'.format(curs.rowcount))
 
-            curs.execute(self.CREATE_FILE_C_FILE_D_MAPPING)
+            curs.execute(self.CREATE_FILE_C_FILE_D_MAPPING_AWARD)
             logger.info('NEW LINKAGES ADDED TO FABA CORRECTOR. {} potential links '
+                        '(including duplicates)'.format(curs.rowcount))
+
+            curs.execute(self.CREATE_FILE_C_FILE_D_MAPPING_TRANSACTION)
+            logger.info('NEW LINKAGES ADDED TO FABA CORRECTOR (awards with URI and FAIN). {} potential links '
                         '(including duplicates)'.format(curs.rowcount))
 
             curs.execute(self.LINK_FILE_C_FILE_D)
@@ -50,7 +54,7 @@ class Command(BaseCommand):
             SET award_id = NULL;
     """
 
-    CREATE_FILE_C_FILE_D_MAPPING = """
+    CREATE_FILE_C_FILE_D_MAPPING_AWARD = """
         WITH bad_faba AS   -- GET BAD/Unmapped FABA
             (SELECT
                 financial_accounts_by_awards_id,
@@ -63,6 +67,10 @@ class Command(BaseCommand):
             LEFT OUTER JOIN awards
                 ON award_id = awards.id
             WHERE awards.recipient_id IS NULL --Bad link or Unlinked
+            AND (faba.piid is not Null
+                OR (faba.fain is not Null AND faba.uri is Null)
+                OR (faba.uri is not Null AND faba.fain is Null)
+                )
             ),
         correct_awards AS
             (SELECT a.id, a.piid, a.fain, a.uri, pa.piid as parent_award_piid
@@ -70,6 +78,10 @@ class Command(BaseCommand):
             LEFT OUTER JOIN awards AS pa
                 ON pa.id = a.parent_award_id
             where a.recipient_id is not Null
+            AND (a.piid is not Null
+                OR (a.fain is not Null AND a.uri is Null)
+                OR (a.uri is not Null AND a.fain is Null)
+                )
             )
         INSERT INTO faba_corrector (financial_accounts_by_awards_id, new_award_id)
           SELECT bad_faba.financial_accounts_by_awards_id, correct_awards.id FROM bad_faba, correct_awards
@@ -81,6 +93,37 @@ class Command(BaseCommand):
             ON CONFLICT ON CONSTRAINT faba_corrector_uc
                 DO NOTHING
         ;
+    """
+
+    # This script attempts to find file C awards with URI and FAIN, and link them to a distinct award_id.
+    CREATE_FILE_C_FILE_D_MAPPING_TRANSACTION = """
+        WITH bad_faba AS   -- GET BAD/Unmapped FABA
+            (SELECT 
+                financial_accounts_by_awards_id,
+                faba.fain,
+                faba.uri,
+                awards.recipient_id
+            FROM financial_accounts_by_awards as faba
+            left outer JOIN awards
+                ON award_id = awards.id
+            WHERE (awards.latest_transaction_id IS NULL) --bAD or NOTMAPPED
+            AND (faba.fain is not Null AND faba.uri is not Null)
+            ),
+        correct_transactions AS
+            (SELECT DISTINCT tn.award_id, tf.fain, tf.uri
+            from transaction_normalized as tn
+            left outer join transaction_fabs as tf 
+                on tf.transaction_id = tn.id
+            where (tf.fain is not Null AND tf.uri is not Null)
+            )
+        INSERT INTO faba_corrector (financial_accounts_by_awards_id, new_award_id)
+            
+          SELECT bad_faba.financial_accounts_by_awards_id, correct_transactions.award_id FROM bad_faba, correct_transactions
+          WHERE COALESCE(correct_transactions.fain, '') = COALESCE(bad_faba.fain, '')
+            AND COALESCE(correct_transactions.uri, '') = COALESCE(bad_faba.uri, '')
+            ON CONFLICT ON CONSTRAINT faba_corrector_uc 
+                DO NOTHING
+    
     """
 
     LINK_FILE_C_FILE_D = """
