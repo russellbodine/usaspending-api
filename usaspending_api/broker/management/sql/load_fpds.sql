@@ -386,6 +386,7 @@ CREATE TABLE transaction_fpds_new AS
         clinger_cohen_act_planning_code text,
         clinger_cohen_act_planning text,
         commercial_item_acquisition_procedures_code text,
+        commercial_item_acquisition_procedures text,
         commercial_item_test_program_code text,
         commercial_item_test_program text,
         consolidated_contract_code text,
