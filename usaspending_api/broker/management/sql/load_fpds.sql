@@ -1,6 +1,6 @@
-DROP TABLE IF EXISTS transaction_fpds_new;
+DROP TABLE IF EXISTS transaction_fpds;
 
-CREATE TABLE transaction_fpds_new AS
+CREATE TABLE transaction_fpds AS
 (
 
     SELECT
@@ -37,13 +37,13 @@ CREATE TABLE transaction_fpds_new AS
                 UPPER(place_of_performance_congr) AS primary_place_of_performance_congressional_district,
                 UPPER(awardee_or_recipient_legal) AS recipient_name,
                 UPPER(legal_entity_city_name) AS recipient_city_name,
-                UPPER(legal_entity_county_code) AS legal_entity_county_code, --NOT USED IN DOWNLOAD
-                UPPER(legal_entity_county_name) AS legal_entity_county_name, --NOT USED IN DOWNLOAD
+                UPPER(legal_entity_county_code) AS recipient_county_code, --NOT USED IN DOWNLOAD
+                UPPER(legal_entity_county_name) AS recipient_county_name, --NOT USED IN DOWNLOAD
                 UPPER(legal_entity_state_code) AS recipient_state_code,
                 UPPER(legal_entity_state_descrip) AS recipient_state_name,
                 UPPER(legal_entity_zip4) AS recipient_zip_4_code,
-                UPPER(legal_entity_zip5) AS legal_entity_zip5, --NOT USED IN DOWNLOAD
-                UPPER(legal_entity_zip_last4) AS legal_entity_zip_last4, --NOT USED IN DOWNLOAD
+                UPPER(legal_entity_zip5) AS recipient_zip5, --NOT USED IN DOWNLOAD
+                UPPER(legal_entity_zip_last4) AS recipient_zip_last4, --NOT USED IN DOWNLOAD
                 UPPER(legal_entity_congressional) AS recipient_congressional_district,
                 UPPER(legal_entity_address_line1) AS recipient_address_line_1,
                 UPPER(legal_entity_address_line2) AS recipient_address_line_2,
@@ -325,13 +325,13 @@ CREATE TABLE transaction_fpds_new AS
         primary_place_of_performance_congressional_district text,
         recipient_name text,
         recipient_city_name text,
-        legal_entity_county_code text,
-        legal_entity_county_name text,
+        recipient_county_code text,
+        recipient_county_name text,
         recipient_state_code text,
         recipient_state_name text,
         recipient_zip_4_code text,
-        legal_entity_zip5 text,
-        legal_entity_zip_last4 text,
+        recipient_zip5 text,
+        recipient_zip_last4 text,
         recipient_congressional_district text,
         recipient_address_line_1 text,
         recipient_address_line_2 text,
