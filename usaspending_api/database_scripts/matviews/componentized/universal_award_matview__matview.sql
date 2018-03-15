@@ -12,7 +12,8 @@ SELECT
     ' ', contract_data."naics",
     ' ', contract_data."naics_description",
     ' ', "psc"."description",
-    ' ', "awards"."description")) AS keyword_ts_vector,
+    ' ', (SELECT string_agg(description, ' ') FROM transaction_normalized AS tn where tn.award_id = awards.id GROUP BY tn.award_id)
+  )) AS keyword_ts_vector,
   to_tsvector(CONCAT(awards.piid, ' ', awards.fain, ' ', awards.uri)) AS award_ts_vector,
   to_tsvector(coalesce(recipient."recipient_name", '')) AS recipient_name_ts_vector,
 

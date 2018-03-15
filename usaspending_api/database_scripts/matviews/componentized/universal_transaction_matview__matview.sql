@@ -12,7 +12,7 @@ SELECT
     ' ', "transaction_fpds"."naics",
     ' ', "naics"."description",
     ' ', "psc"."description",
-    ' ', "awards"."description")) AS keyword_ts_vector,
+    ' ', "transaction_normalized"."description")) AS keyword_ts_vector,
   to_tsvector(CONCAT(awards.piid, ' ', awards.fain, ' ', awards.uri)) AS award_ts_vector,
   to_tsvector(coalesce("legal_entity"."recipient_name", '')) AS recipient_name_ts_vector,
 
