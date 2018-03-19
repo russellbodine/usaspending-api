@@ -2,7 +2,7 @@ import logging
 from django.db.models import Q
 from usaspending_api.awards.v2.filters.location_filter_geocode import geocode_filter_locations
 from usaspending_api.awards.v2.lookups.lookups import contract_type_mapping
-from usaspending_api.awards.models import Award
+from usaspending_api.awards.models_matviews import UniversalAwardView
 from usaspending_api.common.exceptions import InvalidParameterException
 from usaspending_api.references.models import PSC
 from usaspending_api.accounts.views.federal_accounts_v2 import filter_on
@@ -18,7 +18,7 @@ def matview_search_filter(filters, model):
 
     faba_flag = False
     faba_queryset = FinancialAccountsByAwards.objects.filter(award__isnull=False)
-
+    print(model.__class__)
     for key, value in filters.items():
         if value is None:
             raise InvalidParameterException('Invalid filter: ' + key + ' has null as its value.')
@@ -55,6 +55,7 @@ def matview_search_filter(filters, model):
         ]
 
         if key not in key_list:
+            print(key_list)
             raise InvalidParameterException('Invalid filter: ' + key + ' does not exist.')
 
         if key == "keyword":
@@ -261,7 +262,8 @@ def matview_search_filter(filters, model):
             faba_queryset = faba_queryset.filter(or_queryset)
 
         # Award filters below
-        elif type(model) != Award:
+        elif model.__class__ is UniversalAwardView:
+
             continue
 
         elif key == "period_of_performance_start_date":

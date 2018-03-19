@@ -201,6 +201,8 @@ class UniversalAwardView(models.Model):
     product_or_service_description = models.TextField()
     naics_code = models.TextField()
     naics_description = models.TextField()
+    period_of_perf_potential_e = models.TextField()
+    ordering_period_end_date = models.TextField()
 
     class Meta:
         managed = False
