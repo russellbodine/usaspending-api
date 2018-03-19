@@ -16,7 +16,7 @@ def date_or_fy_queryset(date_dict, table, fiscal_year_column, action_date_column
     for v in date_dict:
         s = generate_date_from_string(v.get("start_date"))
         e = generate_date_from_string(v.get("end_date"))
-        if dates_are_fiscal_year_bookends(s, e):
+        if action_date_column == 'action_date' and dates_are_fiscal_year_bookends(s, e):
             full_fiscal_years.append((s, e))
 
     if len(full_fiscal_years) == len(date_dict):

@@ -84,7 +84,10 @@ SELECT
   contract_data."product_or_service_code",
   "psc"."description" AS product_or_service_description,
   contract_data."naics" AS naics_code,
-  contract_data."naics_description"
+  contract_data."naics_description",
+  contract_data."period_of_perf_potential_e",
+  contract_data."ordering_period_end_date"
+
 FROM
   "awards"
 LEFT OUTER JOIN

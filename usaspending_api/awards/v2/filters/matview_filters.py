@@ -2,6 +2,7 @@ import logging
 from django.db.models import Q
 from usaspending_api.awards.v2.filters.location_filter_geocode import geocode_filter_locations
 from usaspending_api.awards.v2.lookups.lookups import contract_type_mapping
+from usaspending_api.awards.models import Award
 from usaspending_api.common.exceptions import InvalidParameterException
 from usaspending_api.references.models import PSC
 from usaspending_api.accounts.views.federal_accounts_v2 import filter_on
@@ -45,7 +46,12 @@ def matview_search_filter(filters, model):
             # next 3 keys used by federal account page
             'federal_account_ids',
             'object_class',
-            'program_activity'
+            'program_activity'            
+            # award filters
+            'period_of_performance_start_date',
+            'period_of_performance_current_end_date',
+            'period_of_performance_potential_end_date',
+            'ordering_period_end_date'
         ]
 
         if key not in key_list:
@@ -253,6 +259,35 @@ def matview_search_filter(filters, model):
             for v in value:
                 or_queryset |= Q(treasury_account__program_balances__program_activity__program_activity_code=v)
             faba_queryset = faba_queryset.filter(or_queryset)
+
+        # Award filters below
+        elif type(model) != Award:
+            continue
+
+        elif key == "period_of_performance_start_date":
+
+            success, or_queryset = date_or_fy_queryset(value, model, "fiscal_year",
+                                                       "period_of_performance_start_date")
+            if success:
+                queryset &= or_queryset
+
+        elif key == "period_of_performance_current_end_date":
+            success, or_queryset = date_or_fy_queryset(value, model, "fiscal_year",
+                                                       "period_of_performance_current_end_date")
+            if success:
+                queryset &= or_queryset
+
+        elif key == "period_of_performance_potential_end_date":
+            success, or_queryset = date_or_fy_queryset(value, model, "fiscal_year",
+                                                       "period_of_performance_potential_end_date")
+            if success:
+                queryset &= or_queryset
+
+        elif key == "ordering_period_end_date":
+            success, or_queryset = date_or_fy_queryset(value, model, "fiscal_year",
+                                                       "ordering_period_end_date")
+            if success:
+                queryset &= or_queryset
 
     if faba_flag:
         award_ids = faba_queryset.values('award_id')
