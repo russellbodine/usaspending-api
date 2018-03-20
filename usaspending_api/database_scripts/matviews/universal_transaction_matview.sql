@@ -29,6 +29,9 @@ SELECT
 
   "transaction_normalized"."id" AS transaction_id,
   "transaction_normalized"."action_date"::date,
+  "transaction_normalized"."update_date"::date,
+  "transaction_normalized"."last_modified_date"::date,
+
   "transaction_normalized"."fiscal_year",
   "transaction_normalized"."type",
   "transaction_normalized"."action_type",

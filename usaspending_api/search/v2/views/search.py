@@ -416,6 +416,7 @@ class SpendingByGeographyVisualizationViewSet(APIView):
 
     @cache_response()
     def post(self, request):
+        print("DEFUALT 121212")
         json_request = request.data
         self.scope = json_request.get("scope")
         self.filters = json_request.get("filters", {})

@@ -13,6 +13,9 @@ class UniversalTransactionView(models.Model):
     recipient_name_ts_vector = SearchVectorField()
     transaction_id = models.IntegerField()
     action_date = models.DateField(blank=True, null=False)
+    update_date = models.DateField(blank=True, null=False)
+    last_modified_date = models.DateField(blank=True, null=False)
+
     fiscal_year = models.IntegerField()
     type = models.TextField(blank=True, null=True)
     action_type = models.TextField()

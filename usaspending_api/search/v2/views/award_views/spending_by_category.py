@@ -17,4 +17,4 @@ class SpendingByCategoryAwardVisualizationViewSet(APIView):
     @cache_response()
     def post(self, request):
 
-        return SpendingByCategory.spending_by_category(request, "award")
+        return SpendingByCategory.spending_by_category(self, request, "award")

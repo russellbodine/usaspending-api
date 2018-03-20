@@ -2,7 +2,7 @@ import logging
 from django.db.models import Q
 from usaspending_api.awards.v2.filters.location_filter_geocode import geocode_filter_locations
 from usaspending_api.awards.v2.lookups.lookups import contract_type_mapping
-from usaspending_api.awards.models_matviews import UniversalAwardView
+from usaspending_api.awards.models_matviews import UniversalAwardView, UniversalTransactionView
 from usaspending_api.common.exceptions import InvalidParameterException
 from usaspending_api.references.models import PSC
 from usaspending_api.accounts.views.federal_accounts_v2 import filter_on
@@ -263,33 +263,45 @@ def matview_search_filter(filters, model):
 
         # Award filters below
         elif model.__class__ is UniversalAwardView:
+            if key == "period_of_performance_start_date":
 
-            continue
+                success, or_queryset = date_or_fy_queryset(value, model, "fiscal_year",
+                                                           "period_of_performance_start_date")
+                if success:
+                    queryset &= or_queryset
 
-        elif key == "period_of_performance_start_date":
+            elif key == "period_of_performance_current_end_date":
+                success, or_queryset = date_or_fy_queryset(value, model, "fiscal_year",
+                                                           "period_of_performance_current_end_date")
+                if success:
+                    queryset &= or_queryset
 
-            success, or_queryset = date_or_fy_queryset(value, model, "fiscal_year",
-                                                       "period_of_performance_start_date")
-            if success:
-                queryset &= or_queryset
+            elif key == "period_of_performance_potential_end_date":
+                success, or_queryset = date_or_fy_queryset(value, model, "fiscal_year",
+                                                           "period_of_performance_potential_end_date")
+                if success:
+                    queryset &= or_queryset
 
-        elif key == "period_of_performance_current_end_date":
-            success, or_queryset = date_or_fy_queryset(value, model, "fiscal_year",
-                                                       "period_of_performance_current_end_date")
-            if success:
-                queryset &= or_queryset
+            elif key == "ordering_period_end_date":
+                success, or_queryset = date_or_fy_queryset(value, model, "fiscal_year",
+                                                           "ordering_period_end_date")
+                if success:
+                    queryset &= or_queryset
 
-        elif key == "period_of_performance_potential_end_date":
-            success, or_queryset = date_or_fy_queryset(value, model, "fiscal_year",
-                                                       "period_of_performance_potential_end_date")
-            if success:
-                queryset &= or_queryset
+        elif model.__class__ is UniversalTransactionView:
+            if key == "last_modified_date":
 
-        elif key == "ordering_period_end_date":
-            success, or_queryset = date_or_fy_queryset(value, model, "fiscal_year",
-                                                       "ordering_period_end_date")
-            if success:
-                queryset &= or_queryset
+                success, or_queryset = date_or_fy_queryset(value, model, "fiscal_year",
+                                                           "last_modified_date")
+                if success:
+                    queryset &= or_queryset
+
+            if key == "update_date":
+
+                success, or_queryset = date_or_fy_queryset(value, model, "fiscal_year",
+                                                           "update_date")
+                if success:
+                    queryset &= or_queryset
 
     if faba_flag:
         award_ids = faba_queryset.values('award_id')
