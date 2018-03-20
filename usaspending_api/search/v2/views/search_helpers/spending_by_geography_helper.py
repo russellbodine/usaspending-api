@@ -68,7 +68,6 @@ class SpendingByGeography:
             self.queryset, self.matview_model = spending_by_geography_award(self.filters)
             amount_column = "total_obligation"
 
-
         if self.geo_layer == 'state':
             # State will have one field (state_code) containing letter A-Z
             kwargs = {

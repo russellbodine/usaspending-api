@@ -84,13 +84,8 @@ def sum_award_amount(qs, aggregated_name='transaction_amount', filter_types=awar
     vs all other award types (covers IDV)
     """
     aggregate_dict = {}
-    if calculate_totals:
-        qs = qs.annotate(total_obligation=Sum(F('total_obligation')), default=0)
 
-    # Coalescing total_obligation and total_subsidy since fields can be null
-    if not set(filter_types) & set(loan_type_mapping):
-        # just sans loans
-        aggregate_dict[aggregated_name] = Coalesce(F('total_obligation'), 0)
+    aggregate_dict[aggregated_name] = Coalesce(F('total_obligation'), 0)
 
     return qs.annotate(**aggregate_dict)
 

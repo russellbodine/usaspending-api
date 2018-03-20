@@ -229,9 +229,6 @@ def spending_over_time(filters):
 
 def spending_by_geography(filters):
     view_chain = [
-        'SummaryTransactionGeoView',
-        'SummaryTransactionMonthView',
-        'SummaryTransactionView',
         'UniversalTransactionView'
     ]
     model = None
