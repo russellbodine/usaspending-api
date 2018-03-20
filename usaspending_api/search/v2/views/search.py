@@ -645,7 +645,7 @@ class SpendingByAwardVisualizationViewSet(APIView):
             raise InvalidParameterException("Sort value not found in fields: {}".format(sort))
 
         # build sql query filters
-        queryset = matview_search_filter(filters, UniversalAwardView).values()
+        queryset = matview_search_filter(filters, UniversalAwardView, "award").values()
 
         values = {'award_id', 'piid', 'fain', 'uri', 'type'}  # always get at least these columns
         for field in fields:

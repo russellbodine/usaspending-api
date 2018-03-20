@@ -18,7 +18,6 @@ def date_or_fy_queryset(date_dict, table, fiscal_year_column, action_date_column
         e = generate_date_from_string(v.get("end_date"))
         if action_date_column == 'action_date' and dates_are_fiscal_year_bookends(s, e):
             full_fiscal_years.append((s, e))
-
     if len(full_fiscal_years) == len(date_dict):
         fys = []
         for s, e in full_fiscal_years:
@@ -74,6 +73,24 @@ def sum_transaction_amount(qs, aggregated_name='transaction_amount', filter_type
         # mix of loans and other award types
         # Adding null field to a populated field will return null, used Coalesce to fixes that
         aggregate_dict[aggregated_name] = Coalesce(F('total_subsidy_cost'), 0) + Coalesce(F('total_obligation'), 0)
+
+    return qs.annotate(**aggregate_dict)
+
+
+def sum_award_amount(qs, aggregated_name='transaction_amount', filter_types=award_type_mapping,
+                           calculate_totals=True):
+    """
+    Returns queryset with aggregation (annotated with aggregation_name) for transactions if loan (07, 08)
+    vs all other award types (covers IDV)
+    """
+    aggregate_dict = {}
+    if calculate_totals:
+        qs = qs.annotate(total_obligation=Sum(F('total_obligation')), default=0)
+
+    # Coalescing total_obligation and total_subsidy since fields can be null
+    if not set(filter_types) & set(loan_type_mapping):
+        # just sans loans
+        aggregate_dict[aggregated_name] = Coalesce(F('total_obligation'), 0)
 
     return qs.annotate(**aggregate_dict)
 

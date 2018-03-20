@@ -46,10 +46,10 @@ class SpendingByCategory:
         amount_column = None
         queryset = None
         if transaction_or_award == "transaction":
-            queryset = matview_search_filter(filters, UniversalTransactionView)
+            queryset = matview_search_filter(filters, UniversalTransactionView, transaction_or_award)
             amount_column = "federal_action_obligation"
         elif transaction_or_award == "award":
-            queryset = matview_search_filter(filters, UniversalAwardView)
+            queryset = matview_search_filter(filters, UniversalAwardView, transaction_or_award)
             amount_column = "total_obligation"
         # filter queryset
 

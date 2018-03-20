@@ -15,10 +15,10 @@ from usaspending_api.search.v2.views.search import SpendingByTransactionCountVis
 urlpatterns = [
     url(r'^spending_over_time', SpendingOverTimeVisualizationViewSet.as_view()),
 
-    url(r'^spending_by_category(/){0,1}$', SpendingByCategoryVisualizationViewSet.as_view()),
+    url(r'^spending_by_category/', SpendingByCategoryVisualizationViewSet.as_view()),
     url(r'^spending_by_category_award', SpendingByCategoryAwardVisualizationViewSet.as_view()),
 
-    url(r'^spending_by_geography', SpendingByGeographyVisualizationViewSet.as_view()),
+    url(r'^spending_by_geography/', SpendingByGeographyVisualizationViewSet.as_view()),
     url(r'^spending_by_geography_award', SpendingByGeographyAwardVisualizationViewSet.as_view()),
 
     url(r'^spending_by_award_count', SpendingByAwardCountVisualizationViewSet.as_view()),

@@ -13,7 +13,7 @@ from usaspending_api.awards.models import FinancialAccountsByAwards
 logger = logging.getLogger(__name__)
 
 
-def matview_search_filter(filters, model):
+def matview_search_filter(filters, model, t_or_a='transaction'):
     queryset = model.objects.all()
 
     faba_flag = False
@@ -100,17 +100,17 @@ def matview_search_filter(filters, model):
             awarding_toptier = Q()
             awarding_subtier = Q()
             for v in value:
-                type = v["type"]
+                type_ = v["type"]
                 tier = v["tier"]
                 name = v["name"]
-                if type == "funding":
+                if type_ == "funding":
                     if tier == "toptier":
                         funding_toptier |= Q(funding_toptier_agency_name=name)
                     elif tier == "subtier":
                         funding_subtier |= Q(funding_subtier_agency_name=name)
                     else:
                         raise InvalidParameterException('Invalid filter: agencies ' + tier + ' tier is invalid.')
-                elif type == "awarding":
+                elif type_ == "awarding":
                     if tier == "toptier":
                         awarding_toptier |= Q(awarding_toptier_agency_name=name)
                     elif tier == "subtier":
@@ -118,7 +118,7 @@ def matview_search_filter(filters, model):
                     else:
                         raise InvalidParameterException('Invalid filter: agencies ' + tier + ' tier is invalid.')
                 else:
-                    raise InvalidParameterException('Invalid filter: agencies ' + type + ' type is invalid.')
+                    raise InvalidParameterException('Invalid filter: agencies ' + type_ + ' type is invalid.')
 
             awarding_queryfilter = Q()
             funding_queryfilter = Q()
@@ -262,11 +262,11 @@ def matview_search_filter(filters, model):
             faba_queryset = faba_queryset.filter(or_queryset)
 
         # Award filters below
-        elif model.__class__ is UniversalAwardView:
+        elif t_or_a == 'award':
             if key == "period_of_performance_start_date":
-
                 success, or_queryset = date_or_fy_queryset(value, model, "fiscal_year",
                                                            "period_of_performance_start_date")
+
                 if success:
                     queryset &= or_queryset
 

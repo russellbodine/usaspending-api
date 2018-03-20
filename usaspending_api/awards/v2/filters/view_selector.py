@@ -152,7 +152,11 @@ MATVIEW_SELECTOR = {
             'extent_competed_type_codes',
             'federal_account_ids',
             'object_class',
-            'program_activity'
+            'program_activity',
+            'period_of_performance_start_date',
+            'period_of_performance_current_end_date',
+            'period_of_performance_potential_end_date',
+            'ordering_period_end_date'
             ],
         'prevent_values': {},
         'examine_values': {},
